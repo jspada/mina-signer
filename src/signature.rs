@@ -4,6 +4,9 @@ pub struct Signature {
     pub rx: PallasField,
     pub s: PallasScalar,
 }
-pub trait Signer {
-    fn sign<I: Input>(self, kp: Keypair, msg: I) -> Signature;
+
+impl Signature {
+    pub fn new(rx: PallasField, s: PallasScalar) -> Self {
+        Self { rx, s }
+    }
 }

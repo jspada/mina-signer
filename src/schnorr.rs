@@ -1,5 +1,14 @@
 use super::*;
 
+use algebra::{
+    BigInteger, // for is_even()
+    CanonicalSerialize,
+    PrimeField, // for from_repr()
+    ProjectiveCurve, // for into_affine()
+};
+
+use blake2::{Blake2b, Digest};
+
 pub struct Schnorr<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,
 }
@@ -8,18 +17,18 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
     fn sign<I: Input>(mut self, kp: Keypair, input: I) -> Signature {
         println!("sign");
 
-        let k: PallasScalar = self.blinding_hash(&kp);
+        let k: PallasScalar = self.blinding_hash(&kp, input);
         let r: PallasPoint = PallasPoint::prime_subgroup_generator().mul(k).into_affine();
         let k: PallasScalar = if r.y.0.is_even() { k } else { -k };
 
         let e: PallasScalar = self.message_hash(&kp.pub_key);
         let s: PallasScalar = k + e * kp.sec_key;
-        return Signature { rx: r.x, s: s };
+        return Signature::new(r.x, s);
     }
 }
 
 impl<SC: SpongeConstants> Schnorr<SC> {
-    fn blinding_hash(&mut self, kp: &Keypair) -> PallasScalar {
+    fn blinding_hash<I>(&mut self, kp: &Keypair, input: I) -> PallasScalar where I: Input {
         let mut hasher: Blake2b = Blake2b::new();
 
         // TODO: derive_message

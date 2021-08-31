@@ -13,18 +13,8 @@ pub use roinput::{
     ROInput,
 };
 pub use transaction::Transaction;
-pub use signature::{
-    Signature,
-    Signer,
-};
+pub use signature::Signature;
 pub use schnorr::Schnorr;
-
-use algebra::{
-    BigInteger, // for is_even()
-    CanonicalSerialize, 
-    PrimeField, // for from_repr()
-    ProjectiveCurve, // for into_affine()
-};
 
 use oracle::{
     pasta,
@@ -37,7 +27,9 @@ use oracle::{
     },
 };
 
-use blake2::{Blake2b, Digest};
+pub trait Signer {
+    fn sign<I: Input>(self, kp: Keypair, msg: I) -> Signature;
+}
 
 pub fn create() -> impl Signer {
     return Schnorr::<PlonkSpongeConstants> {
