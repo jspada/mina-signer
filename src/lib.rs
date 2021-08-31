@@ -19,7 +19,6 @@ use algebra::{
     CanonicalSerialize, 
     PrimeField, // for from_repr()
     ProjectiveCurve, // for into_affine()
-    UniformRand,
 };
 
 use oracle::{
@@ -33,7 +32,7 @@ use oracle::{
     },
 };
 
-use blake2::{Blake2b, Digest, digest::generic_array::GenericArray};
+use blake2::{Blake2b, Digest};
 
 pub trait Signer {
     fn sign<I: Input>(self, kp: Keypair, msg: I) -> Signature;
@@ -41,20 +40,17 @@ pub trait Signer {
 
 pub struct Context<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,
-    pub hasher: Blake2b,
 }
 
 pub fn create() -> impl Signer {
     return Context::<PlonkSpongeConstants> {
         sponge: ArithmeticSponge::<PallasField, PlonkSpongeConstants>::new(pasta::fp::params()),
-        hasher: Blake2b::new(),
     };
 }
 
 pub fn custom<SC: SpongeConstants>(params: ArithmeticSpongeParams<PallasField>) -> impl Signer {
     return Context::<SC> {
         sponge: ArithmeticSponge::<PallasField, SC>::new(params),
-        hasher: Blake2b::new(),
     };
 }
 
@@ -74,22 +70,25 @@ impl<SC: SpongeConstants> Signer for Context<SC> {
 
 impl<SC: SpongeConstants> Context<SC> {
     fn blinding_hash(&mut self, kp: &Keypair) -> PallasScalar {
+        let mut hasher: Blake2b = Blake2b::new();
+
         // TODO: derive_message
         let mut bytes: Vec<u8> = vec![];
         kp.sec_key.into_repr()
             .serialize(&mut bytes)
             .expect("failed to serialize secret key");
         
-        self.hasher.update(bytes);
+        hasher.update(bytes);
 
         // TODO: need to swap from little-endian to big-endian?
         return PallasScalar::from_random_bytes(
-                   &self.hasher.clone().finalize()[..31]
+                   &hasher.finalize()[..31]
                )
                .expect("failed to create scalar from bytes");
     }
 
     fn message_hash(&mut self, pub_key: &keypair::PubKey) -> PallasScalar {
+        // TODO: hash_message
         self.sponge.absorb(&[pub_key.x]);
         // Squeeze and convert from field element to scalar
         return PallasScalar::from_repr(self.sponge.squeeze().into_repr().into());
