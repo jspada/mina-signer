@@ -1,14 +1,17 @@
+use signer::NetworkId;
+
 #[test]
 fn signer_test() {
     use signer::{
-        Signer,
         Keypair,
+        NetworkId,
+        Signer,
         Transaction,
     };
 
     println!("Signer tests");
 
-    let ctx = signer::create();
+    let ctx = signer::create(NetworkId::MAINNET);
     let tx = Transaction::new();
     let sig = ctx.sign(Keypair::new(), tx);
 }
@@ -28,7 +31,7 @@ fn custom_signer_test() {
         
     println!("Custom signer tests");
 
-    let ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(pasta::fp_3::params());
+    let ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(pasta::fp_3::params(), NetworkId::MAINNET);
     let tx = Transaction::new();
     ctx.sign(Keypair::new(), tx);
 }

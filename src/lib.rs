@@ -27,18 +27,33 @@ use oracle::{
     },
 };
 
+#[derive(Copy, Clone)]
+#[repr(u8)]
+pub enum NetworkId {
+    TESTNET,
+    MAINNET
+}
+
+impl Into<u8> for NetworkId {
+    fn into(self) -> u8 {
+        self as u8
+    }
+}
+
 pub trait Signer {
     fn sign<I: Input>(self, kp: Keypair, msg: I) -> Signature;
 }
 
-pub fn create() -> impl Signer {
-    return Schnorr::<PlonkSpongeConstants> {
-        sponge: ArithmeticSponge::<PallasField, PlonkSpongeConstants>::new(pasta::fp::params()),
-    };
+pub fn create(network_id: NetworkId) -> impl Signer {
+    return Schnorr::<PlonkSpongeConstants>::new(
+        ArithmeticSponge::<PallasField, PlonkSpongeConstants>::new(pasta::fp::params()),
+        network_id,
+    );
 }
 
-pub fn custom<SC: SpongeConstants>(params: ArithmeticSpongeParams<PallasField>) -> impl Signer {
-    return Schnorr::<SC> {
-        sponge: ArithmeticSponge::<PallasField, SC>::new(params),
-    };
+pub fn custom<SC: SpongeConstants>(params: ArithmeticSpongeParams<PallasField>, network_id: NetworkId) -> impl Signer {
+    return Schnorr::<SC>::new(
+        ArithmeticSponge::<PallasField, SC>::new(params),
+        network_id,
+    );
 }

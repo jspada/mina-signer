@@ -2,7 +2,7 @@ use super::*;
 
 use algebra::{
     BigInteger, // for is_even()
-    CanonicalSerialize,
+    CanonicalSerialize as _,
     PrimeField, // for from_repr()
     ProjectiveCurve, // for into_affine()
 };
@@ -11,6 +11,7 @@ use blake2::{Blake2b, Digest};
 
 pub struct Schnorr<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,
+    pub network_id: NetworkId,
 }
 
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
@@ -28,15 +29,28 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
 }
 
 impl<SC: SpongeConstants> Schnorr<SC> {
+    pub fn new(sponge: ArithmeticSponge<PallasField, SC>, network_id: NetworkId) -> Self {
+        return Schnorr::<SC> {
+            sponge,
+            network_id,
+        }
+    }
+
     fn blinding_hash<I>(&mut self, kp: &Keypair, input: I) -> PallasScalar where I: Input {
         let mut hasher: Blake2b = Blake2b::new();
+
+        let mut roi: ROInput = input.to_roinput();
+        roi.add_field(kp.pub_key.x);
+        roi.add_field(kp.pub_key.y);
+        roi.add_scalar(kp.sec_key);
+        roi.add_bytes(vec!(self.network_id.into()));
 
         // TODO: derive_message
         let mut bytes: Vec<u8> = vec![];
         kp.sec_key.into_repr()
             .serialize(&mut bytes)
             .expect("failed to serialize secret key");
-        
+
         hasher.update(bytes);
 
         // TODO: need to swap from little-endian to big-endian?

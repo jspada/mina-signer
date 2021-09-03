@@ -14,11 +14,11 @@ impl ROInput {
         return ROInput { fields: vec![], bits: vec![] };
     }
 
-    fn add_field(&mut self, f: PallasField) -> () {
-
+    pub fn add_field(&mut self, f: PallasField) -> () {
+        self.fields.push(f);
     }
 
-    fn add_scalar(&mut self, s: PallasField) -> () {
+    pub fn add_scalar(&mut self, s: PallasScalar) -> () {
 
     }
 
@@ -26,7 +26,7 @@ impl ROInput {
 
     }
 
-    fn add_bytes(&mut self, bytes: Vec<u8>) -> () {
+    pub fn add_bytes(&mut self, bytes: Vec<u8>) -> () {
 
     }
 
@@ -38,11 +38,11 @@ impl ROInput {
 
     }
 
-    fn derive_message(&mut self) -> Vec<u8> {
+    fn to_bytes(&mut self) -> Vec<u8> {
         return vec![];
     }
 
-    fn hash_message(&mut self) -> Vec<PallasField> {
+    fn to_fields(&mut self) -> Vec<PallasField> {
         return vec![];
     }
 }
