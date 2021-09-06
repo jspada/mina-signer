@@ -31,7 +31,7 @@ use oracle::{
 #[repr(u8)]
 pub enum NetworkId {
     TESTNET,
-    MAINNET
+    MAINNET,
 }
 
 impl Into<u8> for NetworkId {

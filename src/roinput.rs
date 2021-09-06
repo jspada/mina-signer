@@ -1,12 +1,19 @@
 use super::*;
 
+use algebra::{
+    CanonicalSerialize as _,
+    PrimeField, // for from_repr()
+};
+
+use bitvec::{prelude::*, view::AsBits};
+
 pub trait Input {
     fn to_roinput(self) -> ROInput;
 }
 
 pub struct ROInput {
-    fields: Vec<PallasField>,
-    bits:   Vec<u8>
+    pub fields: Vec<PallasField>,
+    pub bits:   Vec<u8>
 }
 
 impl ROInput {
@@ -19,7 +26,15 @@ impl ROInput {
     }
 
     pub fn add_scalar(&mut self, s: PallasScalar) -> () {
+        let mut bytes: Vec<u8> = vec![];
+        s.into_repr()
+            .serialize(&mut bytes)
+            .expect("failed to serialize scalar");
 
+        let bits = bytes.as_bits::<Lsb0>();
+        println!("bits = {}", bits);
+
+        self.bits.extend(&bytes);
     }
 
     fn add_bit(&mut self, b: bool) -> () {
