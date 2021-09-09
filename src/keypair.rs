@@ -15,7 +15,7 @@ use crate::domain::*;
 pub type SecKey = PallasScalar;
 pub type PubKey = PallasPoint;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Keypair {
     pub sec_key: SecKey,
     pub pub_key: PubKey,
@@ -29,6 +29,10 @@ impl Keypair {
     }
 
     pub fn from_sec_key_hex(sec_key_hex: &str) -> Result<Self, &str> {
+        if sec_key_hex.len() != 64 {
+            return Err("invalid secret key hex length")
+        }
+
         let mut sec_key_bytes: Vec<u8> = match hex::decode(sec_key_hex) {
             Ok(v) => v,
             Err(_) => return Err("failed to decode secret key hex")
