@@ -34,8 +34,6 @@ fn signer_test() {
         Transaction,
     };
 
-    println!("Signer tests");
-
     let ctx = signer::create(NetworkId::MAINNET);
     let tx = Transaction::new();
     let sig = ctx.sign(Keypair::new(), tx);
@@ -53,8 +51,6 @@ fn custom_signer_test() {
         Keypair,
         Transaction,
     };
-
-    println!("Custom signer tests");
 
     let ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(pasta::fp_3::params(), NetworkId::MAINNET);
     let tx = Transaction::new();

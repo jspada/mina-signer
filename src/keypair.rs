@@ -1,8 +1,8 @@
 use algebra::{
-    BigInteger,
+    BigInteger, // for is_even()
     CanonicalDeserialize as _,
     CanonicalSerialize as _,
-    PrimeField,
+    PrimeField, // for into_repr()
     ProjectiveCurve, // for into_affine()
     UniformRand,
 };
@@ -33,16 +33,14 @@ impl Keypair {
             return Err("invalid secret key hex length")
         }
 
-        let mut sec_key_bytes: Vec<u8> = match hex::decode(sec_key_hex) {
-            Ok(v) => v,
-            Err(_) => return Err("failed to decode secret key hex")
-        };
+        let mut sec_key_bytes: Vec<u8> = hex::decode(sec_key_hex).or_else(
+            |_| Err("failed to decode secret key hex")
+        )?;
         sec_key_bytes.reverse(); // mina secret key hex format is in big-endian order
 
-        let sec_key: PallasScalar = match PallasScalar::deserialize(&mut &sec_key_bytes[..]) {
-            Ok(v) => v,
-            Err(_) => return Err("failed to deserialize secret key bytes")
-        };
+        let sec_key: PallasScalar = PallasScalar::deserialize(&mut &sec_key_bytes[..]).or_else(
+            |_| Err("failed to deserialize secret key bytes")
+        )?;
 
         let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator().mul(sec_key).into_affine();
         return Ok(Keypair { sec_key: sec_key, pub_key: pub_key});
@@ -56,28 +54,19 @@ impl Keypair {
         ];
 
         // pub key x-coordinate
-        println!("x = {}", self.pub_key.x.into_repr());
-
         let mut bytes: Vec<u8> = vec![];
         self.pub_key.x
             .serialize(&mut bytes)
             .expect("failed to serialize scalar");
-        println!("pub_key.x bytes = {:x?}", bytes);
         raw.extend(&bytes);
 
         // pub key y-coordinate parity
-        raw.push(!self.pub_key.y.into_repr().is_even() as u8);
-        println!("y is odd {}", !self.pub_key.y.into_repr().is_even());
+        raw.push(!self.pub_key.y.into_repr().is_even() as u8); // TODO: check is_even() like this is correct
 
         // 4-byte checksum
-        println!("raw = {:x?}", raw);
         let hash1 = Sha256::digest(&raw[..]);
         let hash2 = Sha256::digest(&hash1[..]);
-        println!("digest 1 = {:x?}", hash1);
-        println!("digest 2 = {:x?}", hash2);
-        println!("digest 2 = {:x?}", &hash2[..4]);
         raw.extend(&hash2[..4]);
-        println!("raw = {:x?}", raw);
 
         return bs58::encode(raw).into_string();
     }
