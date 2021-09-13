@@ -1,4 +1,7 @@
-use super::*;
+use signer::{
+    Input,
+    ROInput
+};
 
 pub struct Transaction {
 }

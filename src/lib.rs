@@ -1,7 +1,6 @@
 pub mod domain;
 pub mod keypair;
 pub mod roinput;
-pub mod transaction;
 pub mod signature;
 pub mod schnorr;
 
@@ -12,7 +11,6 @@ pub use roinput::{
     Input,
     ROInput,
 };
-pub use transaction::Transaction;
 pub use signature::Signature;
 pub use schnorr::Schnorr;
 
