@@ -30,8 +30,8 @@ use oracle::{
 #[derive(Copy, Clone)]
 #[repr(u8)]
 pub enum NetworkId {
-    TESTNET,
-    MAINNET,
+    TESTNET = 0x00,
+    MAINNET = 0x01,
 }
 
 impl Into<u8> for NetworkId {

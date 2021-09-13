@@ -19,3 +19,5 @@ hex = { version = "0.4" }
 bitvec = { version = "0.22.3" }
 sha2 = { version = "0.9.6" }
 bs58 = { version = "0.4.0" }
+byteordered =  { version = "0.6.0" }
+byteorder =  { version = "1.4.3" }
