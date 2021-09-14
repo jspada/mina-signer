@@ -15,6 +15,7 @@ use algebra::{
 pub trait FieldHelpers {
     fn from_hex(hex: &str) -> Result<PallasField, &str>;
     fn to_bytes(self) -> Vec<u8>;
+    fn to_string(self) -> String;
 }
 
 impl FieldHelpers for PallasField {
@@ -28,7 +29,7 @@ impl FieldHelpers for PallasField {
         )?;
 
         return PallasField::deserialize(&mut &bytes[..]).or_else(
-            |_| Err("Failed to deserialize scalar bytes")
+            |_| Err("Failed to deserialize field bytes")
         );
     }
 
@@ -37,7 +38,11 @@ impl FieldHelpers for PallasField {
         self.into_repr()
             .serialize(&mut bytes)
             .expect("Failed to serialize field"); // TODO: OK error handling?
-            return bytes;
+        return bytes;
+    }
+
+    fn to_string(self) -> String {
+        return hex::encode(self.to_bytes());
     }
 }
 
@@ -45,6 +50,7 @@ impl FieldHelpers for PallasField {
 pub trait ScalarHelpers {
     fn from_hex(hex: &str) -> Result<PallasScalar, &str>;
     fn to_bytes(self) -> Vec<u8>;
+    fn to_string(self) -> String;
 }
 
 impl ScalarHelpers for PallasScalar {
@@ -68,7 +74,13 @@ impl ScalarHelpers for PallasScalar {
         self.into_repr()
             .serialize(&mut bytes)
             .expect("failed to serialize scalar"); // TODO: OK error handling?
-            return bytes;
+        return bytes;
+    }
+
+    fn to_string(self) -> String {
+        let mut bytes = self.to_bytes();
+        bytes.reverse();
+        return hex::encode(bytes);
     }
 }
 
