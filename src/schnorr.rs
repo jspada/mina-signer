@@ -40,10 +40,10 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         let mut hasher: Blake2b = Blake2b::new();
 
         let mut roi: ROInput = input.to_roinput();
-        roi.add_field(kp.pub_key.x);
-        roi.add_field(kp.pub_key.y);
-        roi.add_scalar(kp.sec_key);
-        roi.add_bytes(vec!(self.network_id.into()));
+        roi.append_field(kp.pub_key.x);
+        roi.append_field(kp.pub_key.y);
+        roi.append_scalar(kp.sec_key);
+        roi.append_bytes(vec!(self.network_id.into()));
 
         // TODO: derive_message
         let mut bytes: Vec<u8> = vec![];

@@ -8,11 +8,12 @@ pub type PallasScalar = <PallasPoint as AffineCurve>::ScalarField;
 
 use algebra::{
     CanonicalSerialize as _,
-    PrimeField, // for into_repr()
     CanonicalDeserialize as _,
+    PrimeField, // for into_repr()
 };
 
 pub trait FieldHelpers {
+    fn from_bytes(bytes: Vec<u8>) -> PallasField;
     fn from_hex(hex: &str) -> Result<PallasField, &str>;
     fn to_bytes(self) -> Vec<u8>;
     fn to_string(self) -> String;
@@ -31,6 +32,10 @@ impl FieldHelpers for PallasField {
         return PallasField::deserialize(&mut &bytes[..]).or_else(
             |_| Err("Failed to deserialize field bytes")
         );
+    }
+
+    fn from_bytes(bytes: Vec<u8>) -> PallasField {
+        return PallasField::deserialize(&mut &bytes[..]).expect("failed to deserialize field");
     }
 
     fn to_bytes(self) -> Vec<u8> {
