@@ -3,6 +3,7 @@ use signer::{
     ROInput
 };
 
+#[derive(Clone, Copy)]
 pub struct Transaction {
 }
 

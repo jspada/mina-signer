@@ -9,7 +9,7 @@ use bitvec::{
     view::AsBits,
 };
 
-pub trait Input {
+pub trait Input : Copy {
     fn to_roinput(self) -> ROInput;
 }
 
@@ -34,7 +34,7 @@ impl ROInput {
         self.bits.extend(bits);
     }
 
-    fn append_bit(&mut self, b: bool) -> () {
+    pub fn append_bit(&mut self, b: bool) -> () {
         self.bits.push(b);
     }
 
@@ -42,15 +42,15 @@ impl ROInput {
         self.bits.extend_from_bitslice(bytes.as_bits::<Lsb0>());
     }
 
-    fn append_u32(&mut self, x: u32) -> () {
+    pub fn append_u32(&mut self, x: u32) -> () {
         self.append_bytes(x.to_le_bytes().to_vec());
     }
 
-    fn append_u64(&mut self, x: u64) -> () {
+    pub fn append_u64(&mut self, x: u64) -> () {
         self.append_bytes(x.to_le_bytes().to_vec());
     }
 
-    fn to_bytes(&mut self) -> Vec<u8> {
+    pub fn to_bytes(&mut self) -> Vec<u8> {
         let mut bits: BitVec<Lsb0, u8> = self.fields.iter().fold(
             BitVec::new(),
             | mut acc, fe| {
@@ -64,7 +64,7 @@ impl ROInput {
         return bits.as_raw_slice().to_vec();
     }
 
-    fn to_fields(&mut self) -> Vec<PallasField> {
+    pub fn to_fields(&mut self) -> Vec<PallasField> {
         let mut fields: Vec<PallasField> = self.fields.clone();
 
         let bits_as_fields = self.bits.chunks(PallasField::size_in_bits() - 1).into_iter().fold(
