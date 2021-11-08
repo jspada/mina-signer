@@ -15,8 +15,6 @@ pub struct Schnorr<SC: SpongeConstants> {
 
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
     fn sign<I: Input>(mut self, kp: Keypair, input: I) -> Signature {
-        println!("sign");
-
         let k: PallasScalar = self.blinding_hash(&kp, input);
         let r: PallasPoint = PallasPoint::prime_subgroup_generator().mul(k).into_affine();
         let k: PallasScalar = if r.y.0.is_even() { k } else { -k };
