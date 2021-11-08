@@ -7,7 +7,6 @@ use algebra::{
 };
 
 use blake2::{Blake2b, Digest};
-
 pub struct Schnorr<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,
     pub network_id: NetworkId,

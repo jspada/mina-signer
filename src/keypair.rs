@@ -13,6 +13,25 @@ use crate::domain::*;
 pub type SecKey = PallasScalar;
 pub type PubKey = PallasPoint;
 
+#[derive(Clone, Copy)]
+pub struct CompressedPubKey {
+    pub x: PallasField,
+    pub is_odd: bool,
+}
+
+pub trait PubKeyHelpers {
+    fn to_compressed(self) -> CompressedPubKey;
+}
+
+impl PubKeyHelpers for PubKey {
+    fn to_compressed(self) -> CompressedPubKey {
+        return CompressedPubKey {
+            x: self.x,
+            is_odd: !self.y.into_repr().is_even(),
+        };
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Keypair {
     pub sec_key: SecKey,
