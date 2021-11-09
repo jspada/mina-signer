@@ -50,7 +50,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
                .expect("failed to create scalar from bytes");
     }
 
-    fn message_hash<I>(&mut self, pub_key: &keypair::PubKey, rx: PallasField, input: I) -> PallasScalar where I: Input {
+    fn message_hash<I>(&mut self, pub_key: &PubKey, rx: PallasField, input: I) -> PallasScalar where I: Input {
         let mut roi: ROInput = input.to_roinput();
         roi.append_field(pub_key.x);
         roi.append_field(pub_key.y);

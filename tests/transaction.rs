@@ -1,11 +1,9 @@
 use signer::{
     Input,
     ROInput,
-    keypair::{
-        CompressedPubKey,
-        PubKey,
-        PubKeyHelpers
-    }
+    PubKey,
+    PubKeyHelpers,
+    CompressedPubKey,
 };
 
 const MEMO_BYTES: usize = 34;
@@ -55,13 +53,13 @@ impl Input for Transaction {
         roi.append_u64(self.amount);
         roi.append_bit(self.token_locked);
 
-        return roi;
+        roi
     }
 }
 
 impl Transaction {
-    pub fn new_payment(from: PubKey, to: PubKey, amount: u64, nonce: u32, fee: u64) -> Self {
-        return Transaction {
+    pub fn new_payment(from: PubKey, to: PubKey, amount: u64, fee: u64, nonce: u32) -> Self {
+        Transaction {
             fee: fee,
             fee_token: 1,
             fee_payer_pk: from.to_compressed(),
@@ -74,16 +72,76 @@ impl Transaction {
             token_id: 1,
             amount: amount,
             token_locked: false,
-        };
+        }
     }
 
     pub fn valid_until(mut self, global_slot: u32) -> Self {
         self.valid_until = global_slot;
-        return self;
+
+        self
     }
 
     pub fn memo(mut self, memo: [u8; MEMO_BYTES]) -> Self {
         self.memo = memo;
-        return self;
+
+        self
+    }
+
+    pub fn memo_str(mut self, memo: &str) -> Self {
+        let memo = format!("{:\0<34}", memo); // Pad user-supplied memo with zeros
+        self.memo.copy_from_slice(&memo.as_bytes()[..std::cmp::min(memo.len(), MEMO_BYTES)]);
+        // Anything beyond MEMO_BYTES is truncated
+
+        self
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use signer::Keypair;
+
+    use super::*;
+
+    #[test]
+    fn transaction_memo() {
+        let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect("failed to create keypair");
+
+        let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
+        assert_eq!(tx.memo, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+        // Memo length < max memo length
+        let tx = tx.memo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34]);
+        assert_eq!(tx.memo, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34]);
+
+
+        // Memo > max memo length (truncate)
+        let tx = tx.memo([8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31,
+                                     54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49, 2, 3]);
+        assert_eq!(tx.memo, [8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31,
+                             54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49, 2, 3]);
+    }
+
+    #[test]
+    fn transaction_memo_str() {
+        let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect("failed to create keypair");
+
+        let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
+        assert_eq!(tx.memo, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+        // Memo length < max memo length
+        let tx = tx.memo_str("Hello Mina!");
+        assert_eq!(tx.memo, [72, 101, 108, 108, 111, 32, 77, 105, 110, 97, 33, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+
+        // Memo > max memo length (truncate)
+        let tx = tx.memo_str("012345678901234567890123456789012345");
+        assert_eq!(tx.memo, [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54,
+                             55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51]);
     }
 }

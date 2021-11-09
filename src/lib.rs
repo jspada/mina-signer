@@ -1,4 +1,5 @@
 pub mod domain;
+pub mod pubkey;
 pub mod keypair;
 pub mod roinput;
 pub mod signature;
@@ -6,6 +7,9 @@ pub mod schnorr;
 
 pub use domain::*;
 
+pub use pubkey::PubKey;
+pub use pubkey::PubKeyHelpers;
+pub use pubkey::CompressedPubKey;
 pub use keypair::Keypair;
 pub use roinput::{
     Input,

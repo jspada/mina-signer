@@ -1,36 +1,10 @@
-use algebra::{
-    BigInteger, // for is_even()
-    PrimeField, // for into_repr()
-    ProjectiveCurve, // for into_affine()
-    UniformRand,
-};
-
-use sha2::{Digest, Sha256};
-use bs58;
+use algebra::{ProjectiveCurve, UniformRand};
 
 use crate::domain::*;
 
+use crate::pubkey::*;
+
 pub type SecKey = PallasScalar;
-pub type PubKey = PallasPoint;
-
-#[derive(Clone, Copy)]
-pub struct CompressedPubKey {
-    pub x: PallasField,
-    pub is_odd: bool,
-}
-
-pub trait PubKeyHelpers {
-    fn to_compressed(self) -> CompressedPubKey;
-}
-
-impl PubKeyHelpers for PubKey {
-    fn to_compressed(self) -> CompressedPubKey {
-        return CompressedPubKey {
-            x: self.x,
-            is_odd: !self.y.into_repr().is_even(),
-        };
-    }
-}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Keypair {
@@ -54,24 +28,7 @@ impl Keypair {
     }
 
     pub fn address(self) -> String {
-        let mut raw: Vec<u8> = vec![
-            0xcb, // version for base58 check
-            0x01, // non_zero_curve_point version
-            0x01, // compressed_poly version
-        ];
-
-        // pub key x-coordinate
-        raw.extend(self.pub_key.x.to_bytes());
-
-        // pub key y-coordinate parity
-        raw.push(!self.pub_key.y.into_repr().is_even() as u8); // TODO: check is_even() like this is correct
-
-        // 4-byte checksum
-        let hash1 = Sha256::digest(&raw[..]);
-        let hash2 = Sha256::digest(&hash1[..]);
-        raw.extend(&hash2[..4]);
-
-        return bs58::encode(raw).into_string();
+        return self.pub_key.to_address();
     }
 }
 
@@ -86,6 +43,11 @@ mod tests {
         assert_eq!(Keypair::from_hex("0f5314f176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"), Err("Invalid secret key hex"));
         assert_eq!(Keypair::from_hex("g64244176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"), Err("Invalid secret key hex"));
         assert_eq!(Keypair::from_hex("dd4244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718"), Err("Invalid secret key hex"));
+
+        let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect(
+            "failed to decode keypair secret key");
+
+        println!("address = {}", kp.pub_key.to_address());
     }
 
     #[test]
@@ -95,17 +57,6 @@ mod tests {
                 let kp = Keypair::from_hex($sec_key_hex).expect("failed to create keypair");
                 assert_eq!(kp.address(), $target_address);
             };
-        }
-
-        let a;
-        {
-            let hex = "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718";
-            a = Keypair::from_hex(hex);
-        }
-
-        match a {
-            Ok(_) => println!("PASS"),
-            Err(_) => println!("FAIL")
         }
 
         assert_get_address_eq!("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718", "B62qnzbXmRNo9q32n4SNu2mpB8e7FYYLH8NmaX6oFCBYjjQ8SbD7uzV");
