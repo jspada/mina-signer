@@ -17,6 +17,32 @@ pub struct CompressedPubKey {
     pub is_odd: bool,
 }
 
+fn to_address(x: PallasField, is_odd: bool) -> String {
+    let mut raw: Vec<u8> = vec![
+        0xcb, // version for base58 check
+        0x01, // non_zero_curve_point version
+        0x01, // compressed_poly version
+    ];
+
+    // pub key x-coordinate
+    raw.extend(x.to_bytes());
+
+    // pub key y-coordinate parity
+    raw.push(is_odd as u8); // TODO: confirm is_even() like this is correct
+
+    // 4-byte checksum
+    let hash = Sha256::digest(&Sha256::digest(&raw[..])[..]);
+    raw.extend(&hash[..4]);
+
+    return bs58::encode(raw).into_string();
+}
+
+impl CompressedPubKey {
+    pub fn to_address(self) -> String {
+        return to_address(self.x, self.is_odd);
+    }
+}
+
 pub trait PubKeyHelpers {
     fn to_compressed(self) -> CompressedPubKey;
     fn to_address(self) -> String;
@@ -32,23 +58,7 @@ impl PubKeyHelpers for PubKey {
     }
 
     fn to_address(self) -> String {
-        let mut raw: Vec<u8> = vec![
-            0xcb, // version for base58 check
-            0x01, // non_zero_curve_point version
-            0x01, // compressed_poly version
-        ];
-
-        // pub key x-coordinate
-        raw.extend(self.x.to_bytes());
-
-        // pub key y-coordinate parity
-        raw.push(!self.y.into_repr().is_even() as u8); // TODO: confirm is_even() like this is correct
-
-        // 4-byte checksum
-        let hash = Sha256::digest(&Sha256::digest(&raw[..])[..]);
-        raw.extend(&hash[..4]);
-
-        return bs58::encode(raw).into_string();
+        return to_address(self.x, !self.y.into_repr().is_even());
     }
 
     fn from_address(address: &str) -> Result<Self, &'static str> {
