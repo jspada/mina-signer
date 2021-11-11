@@ -6,7 +6,9 @@ use algebra::{
     ProjectiveCurve, // for into_affine()
 };
 
-use blake2::{Blake2b, Digest};
+use blake2::VarBlake2b;
+use blake2::digest::{Update, VariableOutput};
+
 pub struct Schnorr<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,
     pub network_id: NetworkId,
@@ -15,6 +17,7 @@ pub struct Schnorr<SC: SpongeConstants> {
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
     fn sign<I: Input>(mut self, kp: Keypair, input: I) -> Signature {
         let k: PallasScalar = self.blinding_hash(&kp, input);
+        println!("k = {}", k.to_string());
         let r: PallasPoint = PallasPoint::prime_subgroup_generator().mul(k).into_affine();
         let k: PallasScalar = if r.y.0.is_even() { k } else { -k };
 
@@ -33,7 +36,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
     }
 
     fn blinding_hash<I>(&mut self, kp: &Keypair, input: I) -> PallasScalar where I: Input {
-        let mut hasher: Blake2b = Blake2b::new();
+        let mut hasher = VarBlake2b::new(32).unwrap();
 
         let mut roi: ROInput = input.to_roinput();
         roi.append_field(kp.pub_key.x);
@@ -41,11 +44,17 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         roi.append_scalar(kp.sec_key);
         roi.append_bytes(vec!(self.network_id.into()));
 
+        println!("roi.bytes = {:02x?}", roi.to_bytes());
         hasher.update(roi.to_bytes());
 
         // TODO: need to swap from little-endian to big-endian?
+        let mut bytes: [u8; 32] = [0; 32];
+        hasher.finalize_variable(|out| { bytes.copy_from_slice(out)});
+        println!("blake = {} {:02x?}", bytes.len(), bytes);
+        bytes[bytes.len()-1] &= 0b0011_1111; // drop top two bits
+        //bytes.reverse();
         return PallasScalar::from_random_bytes(
-                   &hasher.finalize()[..31]
+                   &bytes[..]
                )
                .expect("failed to create scalar from bytes");
     }

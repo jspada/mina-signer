@@ -65,7 +65,7 @@ impl Transaction {
             fee_payer_pk: from.to_compressed(),
             nonce: nonce,
             valid_until: u32::MAX,
-            memo: [0; MEMO_BYTES],
+            memo: array_init::array_init(|i| (i == 0) as u8),
             tag: PAYMENT_TX_TAG,
             source_pk: from.to_compressed(),
             receiver_pk: to.to_compressed(),
@@ -81,15 +81,19 @@ impl Transaction {
         self
     }
 
-    pub fn memo(mut self, memo: [u8; MEMO_BYTES]) -> Self {
-        self.memo = memo;
+    pub fn memo(mut self, memo: [u8; MEMO_BYTES - 2]) -> Self {
+        self.memo[0] = 0x01;
+        self.memo[1] = (MEMO_BYTES - 2) as u8;
+        self.memo[2..].copy_from_slice(&memo[..]);
 
         self
     }
 
     pub fn memo_str(mut self, memo: &str) -> Self {
-        let memo = format!("{:\0<34}", memo); // Pad user-supplied memo with zeros
-        self.memo.copy_from_slice(&memo.as_bytes()[..std::cmp::min(memo.len(), MEMO_BYTES)]);
+        self.memo[0] = 0x01;
+        self.memo[1] = std::cmp::min(memo.len(), MEMO_BYTES - 2) as u8;
+        let memo = format!("{:\0<32}", memo); // Pad user-supplied memo with zeros
+        self.memo[2..].copy_from_slice(&memo.as_bytes()[..std::cmp::min(memo.len(), MEMO_BYTES - 2)]);
         // Anything beyond MEMO_BYTES is truncated
 
         self
@@ -108,21 +112,21 @@ mod tests {
         let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect("failed to create keypair");
 
         let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
-        assert_eq!(tx.memo, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(tx.memo, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
         // Memo length < max memo length
-        let tx = tx.memo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34]);
-        assert_eq!(tx.memo, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34]);
+        let tx = tx.memo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0,
+                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(tx.memo, [1, 32, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
 
         // Memo > max memo length (truncate)
         let tx = tx.memo([8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31,
-                                     54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49, 2, 3]);
-        assert_eq!(tx.memo, [8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31,
-                             54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49, 2, 3]);
+                                     54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49]);
+        assert_eq!(tx.memo, [1, 32, 8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2,
+                             31, 54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49]);
     }
 
     #[test]
@@ -130,18 +134,18 @@ mod tests {
         let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect("failed to create keypair");
 
         let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
-        assert_eq!(tx.memo, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(tx.memo, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
         // Memo length < max memo length
         let tx = tx.memo_str("Hello Mina!");
-        assert_eq!(tx.memo, [72, 101, 108, 108, 111, 32, 77, 105, 110, 97, 33, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(tx.memo, [1, 11, 72, 101, 108, 108, 111, 32, 77, 105, 110, 97, 33, 0, 0, 0, 0, 0,
+                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
 
         // Memo > max memo length (truncate)
         let tx = tx.memo_str("012345678901234567890123456789012345");
-        assert_eq!(tx.memo, [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54,
-                             55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51]);
+        assert_eq!(tx.memo, [1, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54,
+                             55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49]);
     }
 }

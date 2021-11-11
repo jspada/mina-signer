@@ -47,7 +47,9 @@ impl FieldHelpers for PallasField {
     }
 
     fn to_string(self) -> String {
-        return hex::encode(self.to_bytes());
+        let mut bytes = self.to_bytes();
+        bytes.reverse();
+        return hex::encode(bytes);
     }
 }
 

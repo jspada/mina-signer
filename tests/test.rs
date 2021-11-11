@@ -30,8 +30,11 @@ fn signer_test() {
         println!("receiver    = {}", tx.receiver_pk.to_address());
         println!("amount      = {}", tx.amount);
         println!("fee         = {}", tx.fee);
+        println!("fee_token   = {}", tx.fee_token);
+        println!("token_id    = {}", tx.token_id);
+        println!("token_locked= {}", tx.token_locked);
         println!("valid_until = {}", tx.valid_until);
-        println!("memo        = {}", std::str::from_utf8(&tx.memo.to_vec()[..]).unwrap());
+        println!("memo        = {}", std::str::from_utf8(&tx.memo.to_vec()[2..]).unwrap());
 
         let ctx = signer::create(NetworkId::TESTNET);
         let sig = ctx.sign(kp, tx);
@@ -44,7 +47,7 @@ fn signer_test() {
         // ab0234bb3706300ff37310d627940c2d894ae563c3197e6b2ba2b500732eeb01
         // c2953ee2f90e28105736ca42e52f81df3001f2d3c315407e13d9aca8c6416137
 
-        println!("sig.rx = {}", sig.rx.into_repr());
+        println!("sig.rx = {}", sig.rx.to_string());
         println!("sig.s  = {}", sig.s.into_repr());
         println!("sig    = {}", sig.to_string());
 
