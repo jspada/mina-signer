@@ -1,10 +1,4 @@
-use signer::{
-    Input,
-    ROInput,
-    PubKey,
-    PubKeyHelpers,
-    CompressedPubKey,
-};
+use signer::{CompressedPubKey, Input, NetworkId, PubKey, PubKeyHelpers, ROInput};
 
 const MEMO_BYTES: usize = 34;
 const TAG_BITS: usize = 3;
@@ -54,6 +48,14 @@ impl Input for Transaction {
         roi.append_bit(self.token_locked);
 
         roi
+    }
+
+    fn domain_string(self, network_id: NetworkId) -> &'static str {
+        // Domain strings must have length <= 20
+        match network_id {
+            NetworkId::MAINNET => "MinaSignatureMainnet",
+            NetworkId::TESTNET => "CodaSignature",
+        }
     }
 }
 
@@ -106,6 +108,13 @@ mod tests {
     use signer::Keypair;
 
     use super::*;
+
+    #[test]
+    fn transaction_prefix() {
+        let tx = Transaction::new_payment(Keypair::rand().pub_key, Keypair::rand().pub_key, 0, 0, 0);
+        assert_eq!(tx.domain_prefix(NetworkId::MAINNET), "MinaSignatureMainnet");
+        assert_eq!(tx.domain_prefix(NetworkId::TESTNET), "CodaSignature*******");
+    }
 
     #[test]
     fn transaction_memo() {

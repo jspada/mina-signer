@@ -17,11 +17,13 @@ pub struct Schnorr<SC: SpongeConstants> {
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
     fn sign<I: Input>(mut self, kp: Keypair, input: I) -> Signature {
         let k: PallasScalar = self.blinding_hash(&kp, input);
-        println!("k = {}", k.to_string());
+        println!("k   = {}", k.to_string());
         let r: PallasPoint = PallasPoint::prime_subgroup_generator().mul(k).into_affine();
-        let k: PallasScalar = if r.y.0.is_even() { k } else { -k };
+        println!("r.x = {}", r.x.to_string());
+        let k: PallasScalar = if r.y.into_repr().is_even() { println!("EVEN"); k } else { println!("ODD"); -k };
 
         let e: PallasScalar = self.message_hash(&kp.pub_key, r.x, input);
+        println!("e   = {}", e.to_string());
         let s: PallasScalar = k + e * kp.sec_key;
         return Signature::new(r.x, s);
     }
@@ -48,15 +50,11 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         hasher.update(roi.to_bytes());
 
         // TODO: need to swap from little-endian to big-endian?
-        let mut bytes: [u8; 32] = [0; 32];
-        hasher.finalize_variable(|out| { bytes.copy_from_slice(out)});
+        let mut bytes = [0; 32];
+        hasher.finalize_variable(|out| { bytes.copy_from_slice(out) });
         println!("blake = {} {:02x?}", bytes.len(), bytes);
         bytes[bytes.len()-1] &= 0b0011_1111; // drop top two bits
-        //bytes.reverse();
-        return PallasScalar::from_random_bytes(
-                   &bytes[..]
-               )
-               .expect("failed to create scalar from bytes");
+        return PallasScalar::from_random_bytes(&bytes[..]).expect("failed to create scalar from bytes");
     }
 
     fn message_hash<I>(&mut self, pub_key: &PubKey, rx: PallasField, input: I) -> PallasScalar where I: Input {
@@ -64,6 +62,11 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         roi.append_field(pub_key.x);
         roi.append_field(pub_key.y);
         roi.append_field(rx);
+
+        println!("roi.fields =");
+        for field in roi.to_fields() {
+            println!("  {}", field.to_string());
+        }
 
         self.sponge.absorb(&roi.to_fields()[..]);
         // Squeeze and convert from field element to scalar
