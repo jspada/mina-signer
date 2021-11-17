@@ -8,7 +8,6 @@ use bitvec::{
     prelude::*,
     view::AsBits,
 };
-use byteorder::NetworkEndian;
 
 pub trait Input : Copy {
     fn to_roinput(self) -> ROInput;
@@ -281,7 +280,7 @@ mod tests {
         roi.append_bit(false);
         roi.append_u32(2147483647);
         roi.append_bit(true);
-        println!("{}", roi.bits.len());
+
         assert!(roi.bits.len() == 641);
         assert!(roi.bits.as_raw_slice() == [
             0x03, 0xa2, 0xeb, 0xba, 0x64, 0x39, 0x18, 0xa5,
@@ -599,10 +598,6 @@ mod tests {
 
       #[test]
       fn transaction_test_1() {
-          use algebra::UniformRand;
-          println!("f1 = {}", PallasField::rand(&mut rand_core::OsRng).to_string());
-          println!("f2 = {}", PallasField::rand(&mut rand_core::OsRng).to_string());
-
           let mut roi = ROInput::new();
           roi.append_field(PallasField::from_hex("41203c6bbac14b357301e1f386d80f52123fd00f02197491b690bddfa742ca22").expect(
               "failed to create field"

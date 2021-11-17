@@ -3,6 +3,7 @@ use signer::{CompressedPubKey, Input, NetworkId, PubKey, PubKeyHelpers, ROInput}
 const MEMO_BYTES: usize = 34;
 const TAG_BITS: usize = 3;
 const PAYMENT_TX_TAG: [bool; TAG_BITS] = [false; TAG_BITS];
+const DELEGATION_TX_TAG: [bool; TAG_BITS] = [false, false, true];
 
 #[derive(Clone, Copy)]
 pub struct Transaction {
@@ -73,6 +74,23 @@ impl Transaction {
             receiver_pk: to.to_compressed(),
             token_id: 1,
             amount: amount,
+            token_locked: false,
+        }
+    }
+
+    pub fn new_delegation(from: PubKey, to: PubKey, fee: u64, nonce: u32) -> Self {
+        Transaction {
+            fee: fee,
+            fee_token: 1,
+            fee_payer_pk: from.to_compressed(),
+            nonce: nonce,
+            valid_until: u32::MAX,
+            memo: array_init::array_init(|i| (i == 0) as u8),
+            tag: DELEGATION_TX_TAG,
+            source_pk: from.to_compressed(),
+            receiver_pk: to.to_compressed(),
+            token_id: 1,
+            amount: 0,
             token_locked: false,
         }
     }

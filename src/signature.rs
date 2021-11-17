@@ -1,3 +1,5 @@
+use std::fmt;
+
 use super::*;
 
 pub struct Signature {
@@ -12,5 +14,22 @@ impl Signature {
 
     pub fn to_string(self) -> String {
         return self.rx.to_string() + &self.s.to_string();
+    }
+}
+
+impl PartialEq for Signature {
+    fn eq(&self, other: &Self) -> bool {
+        self.rx == other.rx && self.s == other.s
+    }
+}
+
+impl Eq for Signature {}
+
+impl fmt::Debug for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Signature")
+         .field("rx", &self.rx)
+         .field("s", &self.s)
+         .finish()
     }
 }
