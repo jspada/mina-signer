@@ -1,9 +1,9 @@
-use std::ops::{Neg};
+use std::ops::Neg;
 
 use algebra::{BigInteger, PrimeField};
 
-use sha2::{Digest, Sha256};
 use bs58;
+use sha2::{Digest, Sha256};
 
 use crate::domain::*;
 
@@ -66,25 +66,28 @@ impl PubKeyHelpers for PubKey {
             return Err("Invalid address length");
         }
 
-        let bytes = bs58::decode(address).into_vec().or_else(
-            |_| Err("Invalid address encoding")
-        )?;
+        let bytes = bs58::decode(address)
+            .into_vec()
+            .or_else(|_| Err("Invalid address encoding"))?;
 
-        let (raw, checksum) = (&bytes[..bytes.len()-4], &bytes[bytes.len()-4..]);
+        let (raw, checksum) = (&bytes[..bytes.len() - 4], &bytes[bytes.len() - 4..]);
         let hash = Sha256::digest(&Sha256::digest(&raw[..])[..]);
         if checksum != &hash[..4] {
             return Err("Invalid address checksum");
         }
 
-        let (version, x_bytes, y_parity) = (&raw[..3], &raw[3..bytes.len()-5], raw[bytes.len()-5] == 0x01);
+        let (version, x_bytes, y_parity) = (
+            &raw[..3],
+            &raw[3..bytes.len() - 5],
+            raw[bytes.len() - 5] == 0x01,
+        );
         if version != [0xcb, 0x01, 0x01] {
             return Err("Invalid address version info");
         }
 
         let x = PallasField::from_bytes(x_bytes.to_vec());
-        let mut pt = PallasPoint::get_point_from_x(x, y_parity).ok_or(
-            "Invalid address x-coordinate"
-        )?;
+        let mut pt =
+            PallasPoint::get_point_from_x(x, y_parity).ok_or("Invalid address x-coordinate")?;
 
         if pt.y.into_repr().is_even() == y_parity {
             pt.y = pt.y.neg();

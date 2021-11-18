@@ -29,8 +29,8 @@ impl Eq for Signature {}
 impl fmt::Debug for Signature {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Signature")
-         .field("rx", &self.rx)
-         .field("s", &self.s)
-         .finish()
+            .field("rx", &self.rx)
+            .field("s", &self.s)
+            .finish()
     }
 }

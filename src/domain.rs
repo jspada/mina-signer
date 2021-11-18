@@ -7,8 +7,8 @@ pub type PallasField = <PallasPoint as AffineCurve>::BaseField;
 pub type PallasScalar = <PallasPoint as AffineCurve>::ScalarField;
 
 use algebra::{
-    CanonicalSerialize as _,
     CanonicalDeserialize as _,
+    CanonicalSerialize as _,
     PrimeField, // for into_repr()
 };
 
@@ -25,13 +25,10 @@ impl FieldHelpers for PallasField {
             return Err("Invalid field hex length");
         }
 
-        let bytes: Vec<u8> = hex::decode(hex).or_else(
-        |_| Err("Failed to decode field hex")
-        )?;
+        let bytes: Vec<u8> = hex::decode(hex).or_else(|_| Err("Failed to decode field hex"))?;
 
-        return PallasField::deserialize(&mut &bytes[..]).or_else(
-            |_| Err("Failed to deserialize field bytes")
-        );
+        return PallasField::deserialize(&mut &bytes[..])
+            .or_else(|_| Err("Failed to deserialize field bytes"));
     }
 
     fn from_bytes(bytes: Vec<u8>) -> PallasField {
@@ -66,14 +63,12 @@ impl ScalarHelpers for PallasScalar {
             return Err("Invalid scalar hex length");
         }
 
-        let mut bytes: Vec<u8> = hex::decode(hex).or_else(
-        |_| Err("Failed to decode scalar hex")
-        )?;
+        let mut bytes: Vec<u8> =
+            hex::decode(hex).or_else(|_| Err("Failed to decode scalar hex"))?;
         bytes.reverse(); // mina scalars hex format is in big-endian order
 
-        return PallasScalar::deserialize(&mut &bytes[..]).or_else(
-            |_| Err("Failed to deserialize scalar bytes")
-        );
+        return PallasScalar::deserialize(&mut &bytes[..])
+            .or_else(|_| Err("Failed to deserialize scalar bytes"));
     }
 
     fn to_bytes(self) -> Vec<u8> {
@@ -98,22 +93,74 @@ mod tests {
     #[test]
     fn field_from_hex() {
         assert_eq!(PallasField::from_hex(""), Err("Invalid field hex length"));
-        assert_eq!(PallasField::from_hex("1428fadcf0c02396e620f14f176fddb5d769b7de2027469d027a80142ef8f07"), Err("Invalid field hex length"));
-        assert_eq!(PallasField::from_hex("0f5314f176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"), Err("Invalid field hex length"));
-        assert_eq!(PallasField::from_hex("g64244176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"), Err("Failed to decode field hex"));
-        assert_eq!(PallasField::from_hex("0cdaf334e9632268a5aa959c2781fb32bf45565fe244ae42c849d3fdc7c644fd"), Err("Failed to deserialize field bytes"));
+        assert_eq!(
+            PallasField::from_hex(
+                "1428fadcf0c02396e620f14f176fddb5d769b7de2027469d027a80142ef8f07"
+            ),
+            Err("Invalid field hex length")
+        );
+        assert_eq!(
+            PallasField::from_hex(
+                "0f5314f176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"
+            ),
+            Err("Invalid field hex length")
+        );
+        assert_eq!(
+            PallasField::from_hex(
+                "g64244176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"
+            ),
+            Err("Failed to decode field hex")
+        );
+        assert_eq!(
+            PallasField::from_hex(
+                "0cdaf334e9632268a5aa959c2781fb32bf45565fe244ae42c849d3fdc7c644fd"
+            ),
+            Err("Failed to deserialize field bytes")
+        );
 
-        assert_eq!(PallasField::from_hex("2eaedae42a7461d5952d27b97ecad068b698ebb94e8a0e4c45388bb613de7e08").is_ok(), true);
+        assert_eq!(
+            PallasField::from_hex(
+                "2eaedae42a7461d5952d27b97ecad068b698ebb94e8a0e4c45388bb613de7e08"
+            )
+            .is_ok(),
+            true
+        );
     }
 
     #[test]
     fn scalar_from_hex() {
         assert_eq!(PallasScalar::from_hex(""), Err("Invalid scalar hex length"));
-        assert_eq!(PallasScalar::from_hex("1428fadcf0c02396e620f14f176fddb5d769b7de2027469d027a80142ef8f07"), Err("Invalid scalar hex length"));
-        assert_eq!(PallasScalar::from_hex("0f5314f176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"), Err("Invalid scalar hex length"));
-        assert_eq!(PallasScalar::from_hex("g64244176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"), Err("Failed to decode scalar hex"));
-        assert_eq!(PallasScalar::from_hex("dd4244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718"), Err("Failed to deserialize scalar bytes"));
+        assert_eq!(
+            PallasScalar::from_hex(
+                "1428fadcf0c02396e620f14f176fddb5d769b7de2027469d027a80142ef8f07"
+            ),
+            Err("Invalid scalar hex length")
+        );
+        assert_eq!(
+            PallasScalar::from_hex(
+                "0f5314f176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"
+            ),
+            Err("Invalid scalar hex length")
+        );
+        assert_eq!(
+            PallasScalar::from_hex(
+                "g64244176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"
+            ),
+            Err("Failed to decode scalar hex")
+        );
+        assert_eq!(
+            PallasScalar::from_hex(
+                "dd4244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718"
+            ),
+            Err("Failed to deserialize scalar bytes")
+        );
 
-        assert_eq!(PallasScalar::from_hex("238344cc01fd5d8cfc7c69cc4a7497bcdb3cb9810d0f8b571615dc3da2433cc2").is_ok(), true);
+        assert_eq!(
+            PallasScalar::from_hex(
+                "238344cc01fd5d8cfc7c69cc4a7497bcdb3cb9810d0f8b571615dc3da2433cc2"
+            )
+            .is_ok(),
+            true
+        );
     }
 }

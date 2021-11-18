@@ -1,12 +1,6 @@
 pub mod transaction;
 
-use signer::{
-    PubKey,
-    PubKeyHelpers,
-    Keypair,
-    NetworkId,
-    Signer,
-};
+use signer::{Keypair, NetworkId, PubKey, PubKeyHelpers, Signer};
 
 use transaction::Transaction;
 
@@ -14,7 +8,10 @@ macro_rules! assert_sign_payment_tx {
     ($sec_key:expr, $source_address:expr, $receiver_address:expr, $amount:expr, $fee:expr,
      $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
         let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
-        assert_eq!(kp.pub_key, PubKey::from_address($source_address).expect("invalid source address"));
+        assert_eq!(
+            kp.pub_key,
+            PubKey::from_address($source_address).expect("invalid source address")
+        );
         let mut tx = Transaction::new_payment(
             PubKey::from_address($source_address).expect("invalid source address"),
             PubKey::from_address($receiver_address).expect("invalid receiver address"),
@@ -53,7 +50,10 @@ macro_rules! assert_sign_delegation_tx {
     ($sec_key:expr, $source_address:expr, $receiver_address:expr, $fee:expr,
      $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
         let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
-        assert_eq!(kp.pub_key, PubKey::from_address($source_address).expect("invalid source address"));
+        assert_eq!(
+            kp.pub_key,
+            PubKey::from_address($source_address).expect("invalid source address")
+        );
         let mut tx = Transaction::new_delegation(
             PubKey::from_address($source_address).expect("invalid source address"),
             PubKey::from_address($receiver_address).expect("invalid receiver address"),
@@ -89,9 +89,12 @@ macro_rules! assert_sign_delegation_tx {
 
 #[test]
 fn signer_test_raw() {
-    let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect("failed to create keypair");
-    let tx = Transaction::new_payment(kp.pub_key,
-        PubKey::from_address("B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt").expect("invalid address"),
+    let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
+        .expect("failed to create keypair");
+    let tx = Transaction::new_payment(
+        kp.pub_key,
+        PubKey::from_address("B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt")
+            .expect("invalid address"),
         1729000000000,
         2000000000,
         16,
@@ -100,8 +103,14 @@ fn signer_test_raw() {
     .set_memo_str("Hello Mina!");
 
     assert_eq!(tx.valid_until, 271828);
-    assert_eq!(tx.memo, [0x01, 0x0b, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x4d, 0x69, 0x6e, 0x61, 0x21, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    assert_eq!(
+        tx.memo,
+        [
+            0x01, 0x0b, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x4d, 0x69, 0x6e, 0x61, 0x21, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        ]
+    );
 
     let mut ctx = signer::create(NetworkId::TESTNET);
     let sig = ctx.sign(kp, tx);
@@ -236,13 +245,13 @@ fn sign_delegation_test_4() {
 
 #[test]
 fn custom_signer_test() {
-    use oracle::{
-        poseidon,
-        pasta,
-    };
+    use oracle::{pasta, poseidon};
 
     let kp = Keypair::rand();
-    let mut ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(pasta::fp_3::params(), NetworkId::MAINNET);
+    let mut ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(
+        pasta::fp_3::params(),
+        NetworkId::MAINNET,
+    );
     let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 2049, 1, 0);
     ctx.sign(kp, tx);
 }

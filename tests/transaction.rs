@@ -113,13 +113,13 @@ impl Transaction {
         self.memo[0] = 0x01;
         self.memo[1] = std::cmp::min(memo.len(), MEMO_BYTES - 2) as u8;
         let memo = format!("{:\0<32}", memo); // Pad user-supplied memo with zeros
-        self.memo[2..].copy_from_slice(&memo.as_bytes()[..std::cmp::min(memo.len(), MEMO_BYTES - 2)]);
+        self.memo[2..]
+            .copy_from_slice(&memo.as_bytes()[..std::cmp::min(memo.len(), MEMO_BYTES - 2)]);
         // Anything beyond MEMO_BYTES is truncated
 
         self
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -129,50 +129,87 @@ mod tests {
 
     #[test]
     fn transaction_domain() {
-        let tx = Transaction::new_payment(Keypair::rand().pub_key, Keypair::rand().pub_key, 0, 0, 0);
+        let tx =
+            Transaction::new_payment(Keypair::rand().pub_key, Keypair::rand().pub_key, 0, 0, 0);
         assert_eq!(tx.domain_string(NetworkId::MAINNET), "MinaSignatureMainnet");
         assert_eq!(tx.domain_string(NetworkId::TESTNET), "CodaSignature");
     }
 
     #[test]
     fn transaction_memo() {
-        let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect("failed to create keypair");
+        let kp =
+            Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
+                .expect("failed to create keypair");
 
         let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
-        assert_eq!(tx.memo, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            tx.memo,
+            [
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0
+            ]
+        );
 
         // Memo length < max memo length
-        let tx = tx.set_memo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0,
-                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-        assert_eq!(tx.memo, [1, 32, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-
+        let tx = tx.set_memo([
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(
+            tx.memo,
+            [
+                1, 32, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0
+            ]
+        );
 
         // Memo > max memo length (truncate)
-        let tx = tx.set_memo([8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31,
-                                         54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49]);
-        assert_eq!(tx.memo, [1, 32, 8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2,
-                             31, 54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49]);
+        let tx = tx.set_memo([
+            8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31, 54, 55, 4, 57, 48, 49,
+            50, 51, 52, 53, 54, 55, 6, 71, 48, 49,
+        ]);
+        assert_eq!(
+            tx.memo,
+            [
+                1, 32, 8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31, 54, 55, 4, 57,
+                48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49
+            ]
+        );
     }
 
     #[test]
     fn transaction_memo_str() {
-        let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718").expect("failed to create keypair");
+        let kp =
+            Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
+                .expect("failed to create keypair");
 
         let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
-        assert_eq!(tx.memo, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            tx.memo,
+            [
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0
+            ]
+        );
 
         // Memo length < max memo length
         let tx = tx.set_memo_str("Hello Mina!");
-        assert_eq!(tx.memo, [1, 11, 72, 101, 108, 108, 111, 32, 77, 105, 110, 97, 33, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-
+        assert_eq!(
+            tx.memo,
+            [
+                1, 11, 72, 101, 108, 108, 111, 32, 77, 105, 110, 97, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ]
+        );
 
         // Memo > max memo length (truncate)
         let tx = tx.set_memo_str("012345678901234567890123456789012345");
-        assert_eq!(tx.memo, [1, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54,
-                             55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49]);
+        assert_eq!(
+            tx.memo,
+            [
+                1, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+                57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49
+            ]
+        );
     }
 }

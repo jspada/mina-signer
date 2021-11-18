@@ -1,31 +1,24 @@
 pub mod domain;
-pub mod pubkey;
 pub mod keypair;
+pub mod pubkey;
 pub mod roinput;
-pub mod signature;
 pub mod schnorr;
+pub mod signature;
 
 pub use domain::*;
 
+pub use keypair::Keypair;
+pub use pubkey::CompressedPubKey;
 pub use pubkey::PubKey;
 pub use pubkey::PubKeyHelpers;
-pub use pubkey::CompressedPubKey;
-pub use keypair::Keypair;
-pub use roinput::{
-    Input,
-    ROInput,
-};
-pub use signature::Signature;
+pub use roinput::{Input, ROInput};
 pub use schnorr::Schnorr;
+pub use signature::Signature;
 
 use oracle::{
     pasta,
     poseidon::{
-        Sponge,
-        ArithmeticSponge,
-        SpongeConstants,
-        ArithmeticSpongeParams,
-        PlonkSpongeConstants,
+        ArithmeticSponge, ArithmeticSpongeParams, PlonkSpongeConstants, Sponge, SpongeConstants,
     },
 };
 
@@ -54,9 +47,9 @@ pub fn create(network_id: NetworkId) -> impl Signer {
     );
 }
 
-pub fn custom<SC: SpongeConstants>(params: ArithmeticSpongeParams<PallasField>, network_id: NetworkId) -> impl Signer {
-    return Schnorr::<SC>::new(
-        ArithmeticSponge::<PallasField, SC>::new(params),
-        network_id,
-    );
+pub fn custom<SC: SpongeConstants>(
+    params: ArithmeticSpongeParams<PallasField>,
+    network_id: NetworkId,
+) -> impl Signer {
+    return Schnorr::<SC>::new(ArithmeticSponge::<PallasField, SC>::new(params), network_id);
 }
