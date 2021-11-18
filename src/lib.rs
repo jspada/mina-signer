@@ -43,7 +43,8 @@ impl Into<u8> for NetworkId {
 }
 
 pub trait Signer {
-    fn sign<I: Input>(self, kp: Keypair, msg: I) -> Signature;
+    fn sign<I: Input>(&mut self, kp: Keypair, input: I) -> Signature;
+    fn verify<I: Input>(&mut self, sig: Signature, pub_key: PubKey, input: I) -> bool;
 }
 
 pub fn create(network_id: NetworkId) -> impl Signer {

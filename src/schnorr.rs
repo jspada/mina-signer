@@ -1,14 +1,21 @@
+use std::ops::Neg;
+
 use super::*;
 
 use algebra::{
-    Zero,
     BigInteger, // for is_even()
     PrimeField, // for from_repr()
     ProjectiveCurve, // for into_affine()
+    Zero,
 };
 
-use blake2::VarBlake2b;
-use blake2::digest::{Update, VariableOutput};
+use blake2::{
+    VarBlake2b,
+    digest::{
+        Update,
+        VariableOutput,
+    },
+};
 
 pub struct Schnorr<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,
@@ -16,7 +23,7 @@ pub struct Schnorr<SC: SpongeConstants> {
 }
 
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
-    fn sign<I: Input>(mut self, kp: Keypair, input: I) -> Signature {
+    fn sign<I: Input>(&mut self, kp: Keypair, input: I) -> Signature {
         let k: PallasScalar = self.blinding_hash(&kp, input);
         let r: PallasPoint = PallasPoint::prime_subgroup_generator().mul(k).into_affine();
         let k: PallasScalar = if r.y.into_repr().is_even() { k } else { -k };
@@ -24,13 +31,22 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
         let e: PallasScalar = self.message_hash(&kp.pub_key, r.x, input);
         let s: PallasScalar = k + e * kp.sec_key;
 
-        return Signature::new(r.x, s);
+        Signature::new(r.x, s)
+    }
+
+    fn verify<I: Input>(&mut self, sig: Signature, pub_key: PubKey, input: I) -> bool {
+        let ev: PallasScalar = self.message_hash(&pub_key, sig.rx, input);
+
+        let sv: PallasPoint = PallasPoint::prime_subgroup_generator().mul(sig.s).into_affine();
+        let rv: PallasPoint = sv + pub_key.mul(ev).neg().into_affine();
+
+        !rv.infinity && rv.y.into_repr().is_even() && rv.x == sig.rx
     }
 }
 
 impl<SC: SpongeConstants> Schnorr<SC> {
     pub fn new(sponge: ArithmeticSponge<PallasField, SC>, network_id: NetworkId) -> Self {
-        return Schnorr::<SC> {
+        Schnorr::<SC> {
             sponge,
             network_id,
         }
@@ -61,7 +77,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         hasher.finalize_variable(|out| { bytes.copy_from_slice(out) });
         bytes[bytes.len()-1] &= 0b0011_1111; // drop top two bits
 
-        return PallasScalar::from_random_bytes(&bytes[..]).expect("failed to create scalar from bytes");
+        PallasScalar::from_random_bytes(&bytes[..]).expect("failed to create scalar from bytes")
     }
 
     fn message_hash<I>(&mut self, pub_key: &PubKey, rx: PallasField, input: I) -> PallasScalar where I: Input {
@@ -79,6 +95,6 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         self.sponge.absorb(&roi.to_fields()[..]);
 
         // Squeeze and convert from field element to scalar
-        return PallasScalar::from_repr(self.sponge.squeeze().into_repr().into());
+        PallasScalar::from_repr(self.sponge.squeeze().into_repr().into())
     }
 }

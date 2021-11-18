@@ -2,6 +2,7 @@ use std::fmt;
 
 use super::*;
 
+#[derive(Clone, Copy)]
 pub struct Signature {
     pub rx: PallasField,
     pub s: PallasScalar,

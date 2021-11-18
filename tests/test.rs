@@ -15,25 +15,37 @@ macro_rules! assert_sign_payment_tx {
      $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
         let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
         assert_eq!(kp.pub_key, PubKey::from_address($source_address).expect("invalid source address"));
-        let tx = Transaction::new_payment(
+        let mut tx = Transaction::new_payment(
             PubKey::from_address($source_address).expect("invalid source address"),
             PubKey::from_address($receiver_address).expect("invalid receiver address"),
             $amount,
             $fee,
             $nonce,
         )
-        .valid_until($valid_until)
-        .memo_str($memo);
+        .set_valid_until($valid_until)
+        .set_memo_str($memo);
 
-        let testnet_ctx = signer::create(NetworkId::TESTNET);
+        let mut testnet_ctx = signer::create(NetworkId::TESTNET);
         let testnet_sig = testnet_ctx.sign(kp, tx);
 
-        let mainnet_ctx = signer::create(NetworkId::MAINNET);
+        let mut mainnet_ctx = signer::create(NetworkId::MAINNET);
         let mainnet_sig = mainnet_ctx.sign(kp, tx);
 
-        assert_ne!(mainnet_sig, testnet_sig);
-        assert_eq!(testnet_sig.to_string(), $testnet_target);
-        assert_eq!(mainnet_sig.to_string(), $mainnet_target);
+        // Signing checks
+        assert_ne!(testnet_sig, mainnet_sig); // Testnet and mainnet sigs are not equal
+        assert_eq!(testnet_sig.to_string(), $testnet_target); // Testnet target check
+        assert_eq!(mainnet_sig.to_string(), $mainnet_target); // Mainnet target check
+
+        // Verification checks
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), true);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), true);
+
+        assert_eq!(mainnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
+        assert_eq!(testnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
+
+        tx.valid_until = !tx.valid_until;
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
     };
 }
 
@@ -42,24 +54,36 @@ macro_rules! assert_sign_delegation_tx {
      $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
         let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
         assert_eq!(kp.pub_key, PubKey::from_address($source_address).expect("invalid source address"));
-        let tx = Transaction::new_delegation(
+        let mut tx = Transaction::new_delegation(
             PubKey::from_address($source_address).expect("invalid source address"),
             PubKey::from_address($receiver_address).expect("invalid receiver address"),
             $fee,
             $nonce,
         )
-        .valid_until($valid_until)
-        .memo_str($memo);
+        .set_valid_until($valid_until)
+        .set_memo_str($memo);
 
-        let testnet_ctx = signer::create(NetworkId::TESTNET);
+        let mut testnet_ctx = signer::create(NetworkId::TESTNET);
         let testnet_sig = testnet_ctx.sign(kp, tx);
 
-        let mainnet_ctx = signer::create(NetworkId::MAINNET);
+        let mut mainnet_ctx = signer::create(NetworkId::MAINNET);
         let mainnet_sig = mainnet_ctx.sign(kp, tx);
 
-        assert_ne!(mainnet_sig, testnet_sig);
-        assert_eq!(testnet_sig.to_string(), $testnet_target);
-        assert_eq!(mainnet_sig.to_string(), $mainnet_target);
+        // Signing checks
+        assert_ne!(testnet_sig, mainnet_sig); // Testnet and mainnet sigs are not equal
+        assert_eq!(testnet_sig.to_string(), $testnet_target); // Testnet target check
+        assert_eq!(mainnet_sig.to_string(), $mainnet_target); // Mainnet target check
+
+        // Verification checks
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), true);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), true);
+
+        assert_eq!(mainnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
+        assert_eq!(testnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
+
+        tx.valid_until = !tx.valid_until;
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
     };
 }
 
@@ -72,14 +96,14 @@ fn signer_test_raw() {
         2000000000,
         16,
     )
-    .valid_until(271828)
-    .memo_str("Hello Mina!");
+    .set_valid_until(271828)
+    .set_memo_str("Hello Mina!");
 
     assert_eq!(tx.valid_until, 271828);
     assert_eq!(tx.memo, [0x01, 0x0b, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x4d, 0x69, 0x6e, 0x61, 0x21, 0x00, 0x00, 0x00, 0x00,
                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
-    let ctx = signer::create(NetworkId::TESTNET);
+    let mut ctx = signer::create(NetworkId::TESTNET);
     let sig = ctx.sign(kp, tx);
 
     assert_eq!(sig.to_string(),
@@ -218,7 +242,7 @@ fn custom_signer_test() {
     };
 
     let kp = Keypair::rand();
-    let ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(pasta::fp_3::params(), NetworkId::MAINNET);
+    let mut ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(pasta::fp_3::params(), NetworkId::MAINNET);
     let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 2049, 1, 0);
     ctx.sign(kp, tx);
 }

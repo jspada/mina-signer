@@ -2,7 +2,7 @@ use signer::{CompressedPubKey, Input, NetworkId, PubKey, PubKeyHelpers, ROInput}
 
 const MEMO_BYTES: usize = 34;
 const TAG_BITS: usize = 3;
-const PAYMENT_TX_TAG: [bool; TAG_BITS] = [false; TAG_BITS];
+const PAYMENT_TX_TAG: [bool; TAG_BITS] = [false, false, false];
 const DELEGATION_TX_TAG: [bool; TAG_BITS] = [false, false, true];
 
 #[derive(Clone, Copy)]
@@ -95,13 +95,13 @@ impl Transaction {
         }
     }
 
-    pub fn valid_until(mut self, global_slot: u32) -> Self {
+    pub fn set_valid_until(mut self, global_slot: u32) -> Self {
         self.valid_until = global_slot;
 
         self
     }
 
-    pub fn memo(mut self, memo: [u8; MEMO_BYTES - 2]) -> Self {
+    pub fn set_memo(mut self, memo: [u8; MEMO_BYTES - 2]) -> Self {
         self.memo[0] = 0x01;
         self.memo[1] = (MEMO_BYTES - 2) as u8;
         self.memo[2..].copy_from_slice(&memo[..]);
@@ -109,7 +109,7 @@ impl Transaction {
         self
     }
 
-    pub fn memo_str(mut self, memo: &str) -> Self {
+    pub fn set_memo_str(mut self, memo: &str) -> Self {
         self.memo[0] = 0x01;
         self.memo[1] = std::cmp::min(memo.len(), MEMO_BYTES - 2) as u8;
         let memo = format!("{:\0<32}", memo); // Pad user-supplied memo with zeros
@@ -143,15 +143,15 @@ mod tests {
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
         // Memo length < max memo length
-        let tx = tx.memo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0,
-                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        let tx = tx.set_memo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 0,
+                                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(tx.memo, [1, 32, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
 
         // Memo > max memo length (truncate)
-        let tx = tx.memo([8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31,
-                                     54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49]);
+        let tx = tx.set_memo([8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2, 31,
+                                         54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49]);
         assert_eq!(tx.memo, [1, 32, 8, 92, 15, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 2,
                              31, 54, 55, 4, 57, 48, 49, 50, 51, 52, 53, 54, 55, 6, 71, 48, 49]);
     }
@@ -165,13 +165,13 @@ mod tests {
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
         // Memo length < max memo length
-        let tx = tx.memo_str("Hello Mina!");
+        let tx = tx.set_memo_str("Hello Mina!");
         assert_eq!(tx.memo, [1, 11, 72, 101, 108, 108, 111, 32, 77, 105, 110, 97, 33, 0, 0, 0, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
 
         // Memo > max memo length (truncate)
-        let tx = tx.memo_str("012345678901234567890123456789012345");
+        let tx = tx.set_memo_str("012345678901234567890123456789012345");
         assert_eq!(tx.memo, [1, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49, 50, 51, 52, 53, 54,
                              55, 56, 57, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 49]);
     }
