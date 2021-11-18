@@ -128,10 +128,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn transaction_prefix() {
+    fn transaction_domain() {
         let tx = Transaction::new_payment(Keypair::rand().pub_key, Keypair::rand().pub_key, 0, 0, 0);
-        assert_eq!(tx.domain_prefix(NetworkId::MAINNET), "MinaSignatureMainnet");
-        assert_eq!(tx.domain_prefix(NetworkId::TESTNET), "CodaSignature*******");
+        assert_eq!(tx.domain_string(NetworkId::MAINNET), "MinaSignatureMainnet");
+        assert_eq!(tx.domain_string(NetworkId::TESTNET), "CodaSignature");
     }
 
     #[test]

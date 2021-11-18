@@ -11,14 +11,8 @@ use bitvec::{
 
 pub trait Input : Copy {
     fn to_roinput(self) -> ROInput;
-    // The domain string length must be <= 20
+    // The domain string length must be <= 20 (TODO: Limit at compile time)
     fn domain_string(self, network_id: NetworkId) -> &'static str;
-    fn domain_prefix(self, network_id: NetworkId) -> String {
-        let mut domain_string = self.domain_string(network_id);
-        // Domain prefixes have a max length of 20 and are padded with '*'
-        domain_string = &domain_string[..std::cmp::min(domain_string.len(), 20)];
-        return format!("{:*<20}", domain_string);
-    }
 }
 
 pub struct ROInput {

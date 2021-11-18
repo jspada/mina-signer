@@ -1,6 +1,7 @@
 use super::*;
 
 use algebra::{
+    Zero,
     BigInteger, // for is_even()
     PrimeField, // for from_repr()
     ProjectiveCurve, // for into_affine()
@@ -22,6 +23,7 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
 
         let e: PallasScalar = self.message_hash(&kp.pub_key, r.x, input);
         let s: PallasScalar = k + e * kp.sec_key;
+
         return Signature::new(r.x, s);
     }
 }
@@ -32,6 +34,16 @@ impl<SC: SpongeConstants> Schnorr<SC> {
             sponge,
             network_id,
         }
+    }
+
+    fn domain_bytes<I>(&self, input: I) -> Vec<u8> where I: Input {
+        let mut domain_string = input.domain_string(self.network_id);
+        // Domain prefixes have a max length of 20 and are padded with '*'
+        domain_string = &domain_string[..std::cmp::min(domain_string.len(), 20)];
+        let mut bytes = format!("{:*<20}", domain_string).as_bytes().to_vec();
+        bytes.resize(32, 0);
+
+        bytes
     }
 
     fn blinding_hash<I>(&mut self, kp: &Keypair, input: I) -> PallasScalar where I: Input {
@@ -58,10 +70,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         roi.append_field(pub_key.y);
         roi.append_field(rx);
 
-        // Set sponge initial state
-        let mut prefix_bytes = input.domain_prefix(self.network_id).as_bytes().to_vec();
-        prefix_bytes.resize(32, 0);
-        self.sponge.absorb(&[PallasField::from_bytes(prefix_bytes)]);
+        // Set sponge initial state (explicitly init state so signer context can be reused)
+        self.sponge.state = vec![PallasField::zero(); self.sponge.state.len()];
+        self.sponge.absorb(&[PallasField::from_bytes(self.domain_bytes(input))]);
         self.sponge.squeeze();
 
         // Absorb random oracle input
