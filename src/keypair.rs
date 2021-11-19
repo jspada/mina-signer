@@ -65,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn address() {
+    fn get_address() {
         macro_rules! assert_get_address_eq {
             ($sec_key_hex:expr, $target_address:expr) => {
                 let kp = Keypair::from_hex($sec_key_hex).expect("failed to create keypair");
