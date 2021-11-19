@@ -1,5 +1,4 @@
-pub use algebra::AffineCurve;
-pub use algebra::Field;
+use algebra::AffineCurve;
 
 use mina_curves::pasta::pallas as Pallas;
 pub use Pallas::Affine as PallasPoint;

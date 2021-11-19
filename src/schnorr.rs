@@ -1,6 +1,8 @@
 use super::*;
 use algebra::{
+    AffineCurve,     // for prime_subgroup_generator()
     BigInteger,      // for is_even()
+    Field,           // for from_random_bytes()
     PrimeField,      // for from_repr()
     ProjectiveCurve, // for into_affine()
     Zero,

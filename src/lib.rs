@@ -5,11 +5,9 @@ pub mod roinput;
 pub mod schnorr;
 pub mod signature;
 
-pub use domain::*;
+pub use domain::{FieldHelpers, PallasField, PallasPoint, PallasScalar, ScalarHelpers};
 pub use keypair::Keypair;
-pub use pubkey::CompressedPubKey;
-pub use pubkey::PubKey;
-pub use pubkey::PubKeyHelpers;
+pub use pubkey::{CompressedPubKey, PubKey, PubKeyHelpers};
 pub use roinput::{Input, ROInput};
 pub use schnorr::Schnorr;
 pub use signature::Signature;

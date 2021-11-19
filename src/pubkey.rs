@@ -3,7 +3,7 @@ use bs58;
 use sha2::{Digest, Sha256};
 use std::ops::Neg;
 
-use crate::domain::*;
+use crate::{FieldHelpers, PallasField, PallasPoint};
 
 const MINA_ADDRESS_LEN: usize = 55;
 
