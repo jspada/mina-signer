@@ -247,7 +247,7 @@ fn custom_signer_test() {
     use oracle::{pasta, poseidon};
 
     let kp = Keypair::rand();
-    let mut ctx = signer::custom::<poseidon::PlonkSpongeConstants3>(
+    let mut ctx = signer::custom::<poseidon::PlonkSpongeConstants15W>(
         pasta::fp_3::params(),
         NetworkId::MAINNET,
     );

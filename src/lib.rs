@@ -15,7 +15,7 @@ pub use signature::Signature;
 use oracle::{
     pasta,
     poseidon::{
-        ArithmeticSponge, ArithmeticSpongeParams, PlonkSpongeConstants, Sponge, SpongeConstants,
+        ArithmeticSponge, ArithmeticSpongeParams, PlonkSpongeConstantsBasic, Sponge, SpongeConstants,
     },
 };
 
@@ -38,8 +38,8 @@ pub trait Signer {
 }
 
 pub fn create(network_id: NetworkId) -> impl Signer {
-    Schnorr::<PlonkSpongeConstants>::new(
-        ArithmeticSponge::<PallasField, PlonkSpongeConstants>::new(pasta::fp::params()),
+    Schnorr::<PlonkSpongeConstantsBasic>::new(
+        ArithmeticSponge::<PallasField, PlonkSpongeConstantsBasic>::new(pasta::fp::params()),
         network_id,
     )
 }

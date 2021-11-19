@@ -1,5 +1,5 @@
 use super::*;
-use algebra::PrimeField;
+use ark_ff::PrimeField;
 use bitvec::{prelude::*, view::AsBits};
 
 pub trait Input: Copy {

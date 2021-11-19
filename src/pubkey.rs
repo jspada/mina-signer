@@ -1,4 +1,4 @@
-use algebra::{BigInteger, PrimeField};
+use ark_ff::{BigInteger, PrimeField};
 use bs58;
 use sha2::{Digest, Sha256};
 use std::ops::Neg;

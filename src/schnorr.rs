@@ -1,11 +1,13 @@
 use super::*;
-use algebra::{
-    AffineCurve,     // for prime_subgroup_generator()
+use ark_ff::{
     BigInteger,      // for is_even()
     Field,           // for from_random_bytes()
     PrimeField,      // for from_repr()
-    ProjectiveCurve, // for into_affine()
     Zero,
+};
+use ark_ec::{
+    AffineCurve,     // for prime_subgroup_generator()
+    ProjectiveCurve, // for into_affine()
 };
 use blake2::{
     digest::{Update, VariableOutput},
@@ -100,6 +102,6 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         self.sponge.absorb(&roi.to_fields()[..]);
 
         // Squeeze and convert from field element to scalar
-        PallasScalar::from_repr(self.sponge.squeeze().into_repr())
+        PallasScalar::from_repr(self.sponge.squeeze().into_repr()).expect("failed to create scalar")
     }
 }

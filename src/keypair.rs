@@ -1,5 +1,7 @@
 use crate::{PallasPoint, PallasScalar, PubKey, PubKeyHelpers, ScalarHelpers};
-use algebra::{AffineCurve, ProjectiveCurve, UniformRand};
+use ark_ec::{AffineCurve, ProjectiveCurve};
+use ark_ff::UniformRand;
+use rand;
 
 pub type SecKey = PallasScalar;
 
@@ -11,7 +13,7 @@ pub struct Keypair {
 
 impl Keypair {
     pub fn rand() -> Self {
-        let sec_key: PallasScalar = PallasScalar::rand(&mut rand_core::OsRng);
+        let sec_key: PallasScalar = PallasScalar::rand(&mut rand::rngs::OsRng);
         let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator()
             .mul(sec_key)
             .into_affine();

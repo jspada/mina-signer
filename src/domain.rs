@@ -1,14 +1,14 @@
-use algebra::AffineCurve;
+use ark_ec::AffineCurve;
+use ark_ff::PrimeField; // for into_repr()
 
 use mina_curves::pasta::pallas as Pallas;
 pub use Pallas::Affine as PallasPoint;
 pub type PallasField = <PallasPoint as AffineCurve>::BaseField;
 pub type PallasScalar = <PallasPoint as AffineCurve>::ScalarField;
 
-use algebra::{
+use ark_serialize::{
     CanonicalDeserialize as _,
     CanonicalSerialize as _,
-    PrimeField, // for into_repr()
 };
 
 pub trait FieldHelpers {
