@@ -15,7 +15,8 @@ pub use signature::Signature;
 use oracle::{
     pasta,
     poseidon::{
-        ArithmeticSponge, ArithmeticSpongeParams, PlonkSpongeConstantsBasic, Sponge, SpongeConstants,
+        ArithmeticSponge, ArithmeticSpongeParams, PlonkSpongeConstantsBasic, Sponge,
+        SpongeConstants,
     },
 };
 

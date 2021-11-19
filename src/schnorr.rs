@@ -1,13 +1,13 @@
 use super::*;
-use ark_ff::{
-    BigInteger,      // for is_even()
-    Field,           // for from_random_bytes()
-    PrimeField,      // for from_repr()
-    Zero,
-};
 use ark_ec::{
     AffineCurve,     // for prime_subgroup_generator()
     ProjectiveCurve, // for into_affine()
+};
+use ark_ff::{
+    BigInteger, // for is_even()
+    Field,      // for from_random_bytes()
+    PrimeField, // for from_repr()
+    Zero,
 };
 use blake2::{
     digest::{Update, VariableOutput},

@@ -6,10 +6,7 @@ pub use Pallas::Affine as PallasPoint;
 pub type PallasField = <PallasPoint as AffineCurve>::BaseField;
 pub type PallasScalar = <PallasPoint as AffineCurve>::ScalarField;
 
-use ark_serialize::{
-    CanonicalDeserialize as _,
-    CanonicalSerialize as _,
-};
+use ark_serialize::{CanonicalDeserialize as _, CanonicalSerialize as _};
 
 pub trait FieldHelpers {
     fn from_bytes(bytes: Vec<u8>) -> PallasField;
