@@ -17,36 +17,36 @@ pub struct ROInput {
 
 impl ROInput {
     pub fn new() -> Self {
-        return ROInput {
+        ROInput {
             fields: vec![],
             bits: BitVec::new(),
-        };
+        }
     }
 
-    pub fn append_field(&mut self, f: PallasField) -> () {
+    pub fn append_field(&mut self, f: PallasField) {
         self.fields.push(f);
     }
 
-    pub fn append_scalar(&mut self, s: PallasScalar) -> () {
+    pub fn append_scalar(&mut self, s: PallasScalar) {
         // mina scalars are 255 bytes
         let bytes = s.to_bytes(); // TODO: Combine these two into one-liner
         let bits = &bytes.as_bits::<Lsb0>()[..PallasScalar::size_in_bits()];
         self.bits.extend(bits);
     }
 
-    pub fn append_bit(&mut self, b: bool) -> () {
+    pub fn append_bit(&mut self, b: bool) {
         self.bits.push(b);
     }
 
-    pub fn append_bytes(&mut self, bytes: Vec<u8>) -> () {
+    pub fn append_bytes(&mut self, bytes: Vec<u8>) {
         self.bits.extend_from_bitslice(bytes.as_bits::<Lsb0>());
     }
 
-    pub fn append_u32(&mut self, x: u32) -> () {
+    pub fn append_u32(&mut self, x: u32) {
         self.append_bytes(x.to_le_bytes().to_vec());
     }
 
-    pub fn append_u64(&mut self, x: u64) -> () {
+    pub fn append_u64(&mut self, x: u64) {
         self.append_bytes(x.to_le_bytes().to_vec());
     }
 
@@ -55,7 +55,8 @@ impl ROInput {
             acc.extend_from_bitslice(
                 &fe.to_bytes().as_bits::<Lsb0>()[..PallasField::size_in_bits()],
             );
-            return acc;
+
+            acc
         });
 
         bits.extend(self.bits.iter());
@@ -96,12 +97,18 @@ impl ROInput {
 
                 acc.push(PallasField::from_bytes(bv.as_raw_slice().to_vec()));
 
-                return acc;
+                acc
             });
 
         fields.extend(bits_as_fields);
 
-        return fields;
+        fields
+    }
+}
+
+impl Default for ROInput {
+    fn default() -> Self {
+        ROInput::new()
     }
 }
 

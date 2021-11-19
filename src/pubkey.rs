@@ -39,7 +39,7 @@ fn to_address(x: PallasField, is_odd: bool) -> String {
 
 impl CompressedPubKey {
     pub fn to_address(self) -> String {
-        return to_address(self.x, self.is_odd);
+        to_address(self.x, self.is_odd)
     }
 }
 
@@ -51,14 +51,14 @@ pub trait PubKeyHelpers {
 
 impl PubKeyHelpers for PubKey {
     fn to_compressed(self) -> CompressedPubKey {
-        return CompressedPubKey {
+        CompressedPubKey {
             x: self.x,
             is_odd: !self.y.into_repr().is_even(),
-        };
+        }
     }
 
     fn to_address(self) -> String {
-        return to_address(self.x, !self.y.into_repr().is_even());
+        to_address(self.x, !self.y.into_repr().is_even())
     }
 
     fn from_address(address: &str) -> Result<Self, &'static str> {
@@ -68,10 +68,10 @@ impl PubKeyHelpers for PubKey {
 
         let bytes = bs58::decode(address)
             .into_vec()
-            .or_else(|_| Err("Invalid address encoding"))?;
+            .map_err(|_| "Invalid address encoding")?;
 
         let (raw, checksum) = (&bytes[..bytes.len() - 4], &bytes[bytes.len() - 4..]);
-        let hash = Sha256::digest(&Sha256::digest(&raw[..])[..]);
+        let hash = Sha256::digest(&Sha256::digest(raw)[..]);
         if checksum != &hash[..4] {
             return Err("Invalid address checksum");
         }
@@ -93,7 +93,7 @@ impl PubKeyHelpers for PubKey {
             pt.y = pt.y.neg();
         }
 
-        return Ok(pt);
+        Ok(pt)
     }
 }
 

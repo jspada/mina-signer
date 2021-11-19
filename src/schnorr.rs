@@ -101,6 +101,6 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         self.sponge.absorb(&roi.to_fields()[..]);
 
         // Squeeze and convert from field element to scalar
-        PallasScalar::from_repr(self.sponge.squeeze().into_repr().into())
+        PallasScalar::from_repr(self.sponge.squeeze().into_repr())
     }
 }

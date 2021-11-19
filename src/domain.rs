@@ -25,14 +25,13 @@ impl FieldHelpers for PallasField {
             return Err("Invalid field hex length");
         }
 
-        let bytes: Vec<u8> = hex::decode(hex).or_else(|_| Err("Failed to decode field hex"))?;
+        let bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode field hex")?;
 
-        return PallasField::deserialize(&mut &bytes[..])
-            .or_else(|_| Err("Failed to deserialize field bytes"));
+        PallasField::deserialize(&mut &bytes[..]).map_err(|_| "Failed to deserialize field bytes")
     }
 
     fn from_bytes(bytes: Vec<u8>) -> PallasField {
-        return PallasField::deserialize(&mut &bytes[..]).expect("failed to deserialize field");
+        PallasField::deserialize(&mut &bytes[..]).expect("failed to deserialize field")
     }
 
     fn to_bytes(self) -> Vec<u8> {
@@ -40,13 +39,15 @@ impl FieldHelpers for PallasField {
         self.into_repr()
             .serialize(&mut bytes)
             .expect("Failed to serialize field"); // TODO: OK error handling?
-        return bytes;
+
+        bytes
     }
 
     fn to_string(self) -> String {
         let mut bytes = self.to_bytes();
         bytes.reverse();
-        return hex::encode(bytes);
+
+        hex::encode(bytes)
     }
 }
 
@@ -63,12 +64,10 @@ impl ScalarHelpers for PallasScalar {
             return Err("Invalid scalar hex length");
         }
 
-        let mut bytes: Vec<u8> =
-            hex::decode(hex).or_else(|_| Err("Failed to decode scalar hex"))?;
+        let mut bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode scalar hex")?;
         bytes.reverse(); // mina scalars hex format is in big-endian order
 
-        return PallasScalar::deserialize(&mut &bytes[..])
-            .or_else(|_| Err("Failed to deserialize scalar bytes"));
+        PallasScalar::deserialize(&mut &bytes[..]).map_err(|_| "Failed to deserialize scalar bytes")
     }
 
     fn to_bytes(self) -> Vec<u8> {
@@ -76,13 +75,15 @@ impl ScalarHelpers for PallasScalar {
         self.into_repr()
             .serialize(&mut bytes)
             .expect("failed to serialize scalar"); // TODO: OK error handling?
-        return bytes;
+
+        bytes
     }
 
     fn to_string(self) -> String {
         let mut bytes = self.to_bytes();
         bytes.reverse();
-        return hex::encode(bytes);
+
+        hex::encode(bytes)
     }
 }
 

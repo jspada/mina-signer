@@ -18,26 +18,21 @@ impl Keypair {
         let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator()
             .mul(sec_key)
             .into_affine();
-        return Keypair {
-            sec_key: sec_key,
-            pub_key: pub_key,
-        };
+
+        Keypair { sec_key, pub_key }
     }
 
     pub fn from_hex(sec_key_hex: &str) -> Result<Self, &'static str> {
-        let sec_key =
-            PallasScalar::from_hex(sec_key_hex).or_else(|_| Err("Invalid secret key hex"))?;
+        let sec_key = PallasScalar::from_hex(sec_key_hex).map_err(|_| "Invalid secret key hex")?;
         let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator()
             .mul(sec_key)
             .into_affine();
-        return Ok(Keypair {
-            sec_key: sec_key,
-            pub_key: pub_key,
-        });
+
+        Ok(Keypair { sec_key, pub_key })
     }
 
     pub fn address(self) -> String {
-        return self.pub_key.to_address();
+        self.pub_key.to_address()
     }
 }
 

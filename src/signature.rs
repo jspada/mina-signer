@@ -12,9 +12,11 @@ impl Signature {
     pub fn new(rx: PallasField, s: PallasScalar) -> Self {
         Self { rx, s }
     }
+}
 
-    pub fn to_string(self) -> String {
-        return self.rx.to_string() + &self.s.to_string();
+impl fmt::Display for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", self.rx.to_string(), self.s.to_string())
     }
 }
 

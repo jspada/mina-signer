@@ -29,9 +29,9 @@ pub enum NetworkId {
     MAINNET = 0x01,
 }
 
-impl Into<u8> for NetworkId {
-    fn into(self) -> u8 {
-        self as u8
+impl From<NetworkId> for u8 {
+    fn from(id: NetworkId) -> u8 {
+        id as u8
     }
 }
 
@@ -41,15 +41,15 @@ pub trait Signer {
 }
 
 pub fn create(network_id: NetworkId) -> impl Signer {
-    return Schnorr::<PlonkSpongeConstants>::new(
+    Schnorr::<PlonkSpongeConstants>::new(
         ArithmeticSponge::<PallasField, PlonkSpongeConstants>::new(pasta::fp::params()),
         network_id,
-    );
+    )
 }
 
 pub fn custom<SC: SpongeConstants>(
     params: ArithmeticSpongeParams<PallasField>,
     network_id: NetworkId,
 ) -> impl Signer {
-    return Schnorr::<SC>::new(ArithmeticSponge::<PallasField, SC>::new(params), network_id);
+    Schnorr::<SC>::new(ArithmeticSponge::<PallasField, SC>::new(params), network_id)
 }
