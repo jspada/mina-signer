@@ -1,18 +1,15 @@
-use std::ops::Neg;
-
 use super::*;
-
 use algebra::{
     BigInteger,      // for is_even()
     PrimeField,      // for from_repr()
     ProjectiveCurve, // for into_affine()
     Zero,
 };
-
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
+use std::ops::Neg;
 
 pub struct Schnorr<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,

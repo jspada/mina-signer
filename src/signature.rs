@@ -1,6 +1,5 @@
-use std::fmt;
-
 use super::*;
+use std::fmt;
 
 #[derive(Clone, Copy)]
 pub struct Signature {

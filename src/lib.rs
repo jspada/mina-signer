@@ -6,7 +6,6 @@ pub mod schnorr;
 pub mod signature;
 
 pub use domain::*;
-
 pub use keypair::Keypair;
 pub use pubkey::CompressedPubKey;
 pub use pubkey::PubKey;

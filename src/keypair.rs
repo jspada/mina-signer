@@ -1,8 +1,6 @@
-use algebra::{ProjectiveCurve, UniformRand};
-
 use crate::domain::*;
-
 use crate::pubkey::*;
+use algebra::{ProjectiveCurve, UniformRand};
 
 pub type SecKey = PallasScalar;
 

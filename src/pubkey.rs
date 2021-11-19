@@ -1,9 +1,7 @@
-use std::ops::Neg;
-
 use algebra::{BigInteger, PrimeField};
-
 use bs58;
 use sha2::{Digest, Sha256};
+use std::ops::Neg;
 
 use crate::domain::*;
 

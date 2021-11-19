@@ -1,7 +1,5 @@
 use super::*;
-
 use algebra::PrimeField;
-
 use bitvec::{prelude::*, view::AsBits};
 
 pub trait Input: Copy {
