@@ -119,7 +119,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         // Absorb random oracle input
         self.sponge.absorb(&roi.to_fields());
 
-        // Squeeze and convert from field element to scalar
+        // Squeeze and convert from base field element to scalar field element
+        // Since the difference in modulus between the two fields is < 2^125, w.h.p., a
+        // random value from one field will fit in the other field.
         PallasScalar::from_repr(self.sponge.squeeze().into_repr()).expect("failed to create scalar")
     }
 }
