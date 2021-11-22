@@ -8,28 +8,67 @@ use ark_ff::PrimeField;
 use bitvec::{prelude::*, view::AsBits};
 
 /// Interface for signed objects
+///
+/// See example in [ROInput] documentation
 pub trait Input: Copy {
-    /// Serialize input into random oracle input
+    /// Serialization to random oracle input
     fn to_roinput(self) -> ROInput;
 
-    /// The unique domain strings for this input (one for each network id)
-    /// Domain string length must be <= 20
+    /// Returns the unique domain string for this input type on network specified by `network_id`.
+    ///
+    /// The domain string length must be `<= 20`.
     // (TODO: Limit at compile time)
     fn domain_string(self, network_id: NetworkId) -> &'static str;
 }
 
 /// Random oracle input structure
-/// For technical reasons related to our proof system and performance,
-/// fields are serialized for signing differently than other types.
-/// Additionally, during signing all members of the random oracle input
-/// get serialized together in two different ways: as bytes (i.e. to_bytes())
-/// and as a vector of field elements (i.e. to_fields()).
-pub struct ROInput {
-    /// Base field elements
-    pub fields: Vec<PallasField>,
+///
+/// The random oracle input encapsulates the serialization format and methods using during signing.
+///
+/// When implementing the [Input] trait in order to enable signing for a type, you must implement
+/// its `to_roinput()` serialization method using the [ROInput] functions below.
+///
+/// For example,
+///
+/// ```rust
+/// use signer::{CompressedPubKey, Input, NetworkId, ROInput};
+///
+/// #[derive(Clone, Copy)]
+/// pub struct MyThing {
+///     pub account: CompressedPubKey,
+///     pub amount: u64,
+///     pub nonce: u32,
+/// }
+///
+/// impl Input for MyThing {
+///     fn to_roinput(self) -> ROInput {
+///         let mut roi = ROInput::new();
+///
+///         roi.append_field(self.account.x);
+///         roi.append_bit(self.account.is_odd);
+///         roi.append_u64(self.amount);
+///         roi.append_u32(self.nonce);
+///
+///         roi
+///     }
+///
+///     fn domain_string(self, network_id: NetworkId) -> &'static str {
+///        match network_id {
+///            NetworkId::MAINNET => "MyThingSigMainnet",
+///            NetworkId::TESTNET => "MyThingSigTestnet",
+///        }
+///    }
+/// }
+/// ```
+/// **Details:** For technical reasons related to our proof system and performance, fields are
+/// serialized for signing differently than other types. Additionally, during signing all members
+/// of the random oracle input get serialized together in two different ways: both as *bytes* and
+/// as a vector of *field elements*.  The random oracle input encapsulates and automates this
+/// complexity.
 
-    /// Packed bits (anything that is not a field element)
-    pub bits: BitVec<Lsb0, u8>,
+pub struct ROInput {
+    fields: Vec<PallasField>,
+    bits: BitVec<Lsb0, u8>,
 }
 
 impl ROInput {

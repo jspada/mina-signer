@@ -29,13 +29,12 @@ use crate::{
     ROInput, Signature, Signer,
 };
 
-/// Schnorr signature context
+/// Schnorr signer context for the Mina signature algorithm
+///
+/// For details about the signature algorithm please see [crate::schnorr]
 pub struct Schnorr<SC: SpongeConstants> {
-    /// Cryptographic sponge
-    pub sponge: ArithmeticSponge<PallasField, SC>,
-
-    /// Mina network id (e.g. mainnet or testnet)
-    pub network_id: NetworkId,
+    sponge: ArithmeticSponge<PallasField, SC>,
+    network_id: NetworkId,
 }
 
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
@@ -63,7 +62,7 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
 }
 
 impl<SC: SpongeConstants> Schnorr<SC> {
-    /// Create a new Mina Schnorr signer context for verifying and signing
+    /// Create a new Schnorr signer context for network instance `network_id` using arithmetic sponge defined by `sponge`.
     pub fn new(sponge: ArithmeticSponge<PallasField, SC>, network_id: NetworkId) -> Self {
         Schnorr::<SC> { sponge, network_id }
     }

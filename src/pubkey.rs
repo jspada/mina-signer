@@ -60,7 +60,7 @@ pub trait PubKeyHelpers {
     /// Serialize public key into corresponding Mina address
     fn to_address(self) -> String;
 
-    /// Deserialize mina address into public key
+    /// Deserialize Mina address into public key
     fn from_address(b58: &str) -> Result<PubKey, &'static str>;
 }
 

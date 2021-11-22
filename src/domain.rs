@@ -7,12 +7,11 @@ use ark_ff::PrimeField; // for into_repr()
 
 use mina_curves::pasta::pallas as Pallas;
 
-// Affine curve point
+/// Affine curve point type
 pub use Pallas::Affine as PallasPoint;
-
-/// Base field element
+/// Base field element type
 pub type PallasField = <PallasPoint as AffineCurve>::BaseField;
-/// Scalar field element
+/// Scalar field element type
 pub type PallasScalar = <PallasPoint as AffineCurve>::ScalarField;
 
 use ark_serialize::{CanonicalDeserialize as _, CanonicalSerialize as _};
@@ -28,8 +27,8 @@ pub trait FieldHelpers {
     /// Serialize to bytes
     fn to_bytes(self) -> Vec<u8>;
 
-    /// Serialize to String
-    fn to_string(self) -> String;
+    /// Serialize to hex
+    fn to_hex(self) -> String;
 }
 
 impl FieldHelpers for PallasField {
@@ -52,7 +51,7 @@ impl FieldHelpers for PallasField {
         bytes
     }
 
-    fn to_string(self) -> String {
+    fn to_hex(self) -> String {
         let mut bytes = self.to_bytes();
         bytes.reverse();
 
@@ -69,8 +68,8 @@ pub trait ScalarHelpers {
     /// Serialize to bytes
     fn to_bytes(self) -> Vec<u8>;
 
-    /// Serialize to String
-    fn to_string(self) -> String;
+    /// Serialize to hex
+    fn to_hex(self) -> String;
 }
 
 impl ScalarHelpers for PallasScalar {
@@ -90,7 +89,7 @@ impl ScalarHelpers for PallasScalar {
         bytes
     }
 
-    fn to_string(self) -> String {
+    fn to_hex(self) -> String {
         let mut bytes = self.to_bytes();
         bytes.reverse();
 

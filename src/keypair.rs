@@ -70,9 +70,8 @@ mod tests {
             Err("Invalid secret key hex")
         );
 
-        let kp =
-            Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
-                .expect("failed to decode keypair secret key");
+        Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
+            .expect("failed to decode keypair secret key");
     }
 
     #[test]
