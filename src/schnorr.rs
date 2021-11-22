@@ -1,3 +1,9 @@
+//! Mina Schnorr signature scheme
+//!
+//! An implementation of the singer interface for the Mina signature algorithm
+//!
+//! Details: <https://github.com/MinaProtocol/mina/blob/develop/docs/specs/signatures/description.md>
+
 use ark_ec::{
     AffineCurve,     // for prime_subgroup_generator()
     ProjectiveCurve, // for into_affine()
@@ -23,8 +29,12 @@ use crate::{
     ROInput, Signature, Signer,
 };
 
+/// Schnorr signature context
 pub struct Schnorr<SC: SpongeConstants> {
+    /// Cryptographic sponge
     pub sponge: ArithmeticSponge<PallasField, SC>,
+
+    /// Mina network id (e.g. mainnet or testnet)
     pub network_id: NetworkId,
 }
 
@@ -53,6 +63,7 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
 }
 
 impl<SC: SpongeConstants> Schnorr<SC> {
+    /// Create a new Mina Schnorr signer context for verifying and signing
     pub fn new(sponge: ArithmeticSponge<PallasField, SC>, network_id: NetworkId) -> Self {
         Schnorr::<SC> { sponge, network_id }
     }

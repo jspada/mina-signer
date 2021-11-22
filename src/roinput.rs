@@ -1,19 +1,39 @@
+//! Random oracle input structures and algorithms
+//!
+//! Definition of random oracle input structure and
+//! methods for serializing into bytes and field elements
+
 use crate::{FieldHelpers, NetworkId, PallasField, PallasScalar, ScalarHelpers};
 use ark_ff::PrimeField;
 use bitvec::{prelude::*, view::AsBits};
 
+/// Interface for signed objects
 pub trait Input: Copy {
+    /// Serialize input into random oracle input
     fn to_roinput(self) -> ROInput;
-    // The domain string length must be <= 20 (TODO: Limit at compile time)
+
+    /// The unique domain strings for this input (one for each network id)
+    /// Domain string length must be <= 20
+    // (TODO: Limit at compile time)
     fn domain_string(self, network_id: NetworkId) -> &'static str;
 }
 
+/// Random oracle input structure
+/// For technical reasons related to our proof system and performance,
+/// fields are serialized for signing differently than other types.
+/// Additionally, during signing all members of the random oracle input
+/// get serialized together in two different ways: as bytes (i.e. to_bytes())
+/// and as a vector of field elements (i.e. to_fields()).
 pub struct ROInput {
+    /// Base field elements
     pub fields: Vec<PallasField>,
+
+    /// Packed bits (anything that is not a field element)
     pub bits: BitVec<Lsb0, u8>,
 }
 
 impl ROInput {
+    /// Create a new empty random oracle input
     pub fn new() -> Self {
         ROInput {
             fields: vec![],
@@ -21,10 +41,12 @@ impl ROInput {
         }
     }
 
+    /// Append a base field element
     pub fn append_field(&mut self, f: PallasField) {
         self.fields.push(f);
     }
 
+    /// Append a scalar field element
     pub fn append_scalar(&mut self, s: PallasScalar) {
         // mina scalars are 255 bytes
         let bytes = s.to_bytes(); // TODO: Combine these two into one-liner
@@ -32,22 +54,27 @@ impl ROInput {
         self.bits.extend(bits);
     }
 
+    /// Append a single bit
     pub fn append_bit(&mut self, b: bool) {
         self.bits.push(b);
     }
 
+    /// Append bytes
     pub fn append_bytes(&mut self, bytes: Vec<u8>) {
         self.bits.extend_from_bitslice(bytes.as_bits::<Lsb0>());
     }
 
+    /// Append a 32-bit unsigned integer
     pub fn append_u32(&mut self, x: u32) {
         self.append_bytes(x.to_le_bytes().to_vec());
     }
 
+    /// Append a 64-bit unsigned integer
     pub fn append_u64(&mut self, x: u64) {
         self.append_bytes(x.to_le_bytes().to_vec());
     }
 
+    /// Serialize random oracle input to bytes
     pub fn to_bytes(&mut self) -> Vec<u8> {
         let mut bits: BitVec<Lsb0, u8> = self.fields.iter().fold(BitVec::new(), |mut acc, fe| {
             acc.extend_from_bitslice(
@@ -62,6 +89,7 @@ impl ROInput {
         return bits.as_raw_slice().to_vec();
     }
 
+    /// Serialize random oracle input to vector of base field elements
     pub fn to_fields(&mut self) -> Vec<PallasField> {
         let mut fields: Vec<PallasField> = self.fields.clone();
 

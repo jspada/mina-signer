@@ -1,3 +1,7 @@
+//! Public key structures and algorithms
+//!
+//! Definition of public key structure and helpers
+
 use ark_ff::{BigInteger, PrimeField};
 use bs58;
 use sha2::{Digest, Sha256};
@@ -5,13 +9,19 @@ use std::ops::Neg;
 
 use crate::{FieldHelpers, PallasField, PallasPoint};
 
+/// Length of Mina addresses
 const MINA_ADDRESS_LEN: usize = 55;
 
+/// Public key
 pub type PubKey = PallasPoint;
 
+/// Compressed public keys consist of x-coordinate and y-coordinate parity.
 #[derive(Clone, Copy)]
 pub struct CompressedPubKey {
+    /// x-coordinate
     pub x: PallasField,
+
+    /// y-coordinate parity
     pub is_odd: bool,
 }
 
@@ -26,7 +36,7 @@ fn to_address(x: PallasField, is_odd: bool) -> String {
     raw.extend(x.to_bytes());
 
     // pub key y-coordinate parity
-    raw.push(is_odd as u8); // TODO: confirm is_even() like this is correct
+    raw.push(is_odd as u8);
 
     // 4-byte checksum
     let hash = Sha256::digest(&Sha256::digest(&raw[..])[..]);
@@ -36,14 +46,21 @@ fn to_address(x: PallasField, is_odd: bool) -> String {
 }
 
 impl CompressedPubKey {
+    /// Serialize compressed public key into corresponding Mina address
     pub fn to_address(self) -> String {
         to_address(self.x, self.is_odd)
     }
 }
 
+/// Public key helper interface
 pub trait PubKeyHelpers {
+    /// Convert public key into compressed public key
     fn to_compressed(self) -> CompressedPubKey;
+
+    /// Serialize public key into corresponding Mina address
     fn to_address(self) -> String;
+
+    /// Deserialize mina address into public key
     fn from_address(b58: &str) -> Result<PubKey, &'static str>;
 }
 

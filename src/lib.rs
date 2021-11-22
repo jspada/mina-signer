@@ -1,3 +1,7 @@
+//! Mina signer library
+
+#![warn(missing_docs)]
+
 pub mod domain;
 pub mod keypair;
 pub mod pubkey;
@@ -20,9 +24,13 @@ use oracle::{
     },
 };
 
+/// Mina network (or blockchain) id
 #[derive(Copy, Clone)]
 pub enum NetworkId {
+    /// Id for all testnets
     TESTNET = 0x00,
+
+    /// Id for mainnet
     MAINNET = 0x01,
 }
 
@@ -32,11 +40,16 @@ impl From<NetworkId> for u8 {
     }
 }
 
+/// Signer interface
 pub trait Signer {
+    /// Sign an input using keypair
     fn sign<I: Input>(&mut self, kp: Keypair, input: I) -> Signature;
+
+    /// Verify signature by secret key corresponding to public key on input
     fn verify<I: Input>(&mut self, sig: Signature, pub_key: PubKey, input: I) -> bool;
 }
 
+/// Create a default signer context on network
 pub fn create(network_id: NetworkId) -> impl Signer {
     Schnorr::<PlonkSpongeConstantsBasic>::new(
         ArithmeticSponge::<PallasField, PlonkSpongeConstantsBasic>::new(pasta::fp::params()),
@@ -44,6 +57,7 @@ pub fn create(network_id: NetworkId) -> impl Signer {
     )
 }
 
+/// Create a custom signer context on network using custom sponge parameters
 pub fn custom<SC: SpongeConstants>(
     params: ArithmeticSpongeParams<PallasField>,
     network_id: NetworkId,

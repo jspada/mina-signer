@@ -1,14 +1,21 @@
+//! Mina signature structure and associated helpers
+
 use std::fmt;
 
 use crate::{FieldHelpers, PallasField, PallasScalar, ScalarHelpers};
 
+/// Signature structure
 #[derive(Clone, Copy)]
 pub struct Signature {
+    /// Field component
     pub rx: PallasField,
+
+    /// Scalar component
     pub s: PallasScalar,
 }
 
 impl Signature {
+    /// Create a new signature
     pub fn new(rx: PallasField, s: PallasScalar) -> Self {
         Self { rx, s }
     }

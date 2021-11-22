@@ -1,17 +1,32 @@
+//! Signer domain and helpers
+//!
+//! Shorthands and helpers for base and scalar field elements
+
 use ark_ec::AffineCurve;
 use ark_ff::PrimeField; // for into_repr()
 
 use mina_curves::pasta::pallas as Pallas;
 pub use Pallas::Affine as PallasPoint;
+
+/// Base field
 pub type PallasField = <PallasPoint as AffineCurve>::BaseField;
+/// Scalar field
 pub type PallasScalar = <PallasPoint as AffineCurve>::ScalarField;
 
 use ark_serialize::{CanonicalDeserialize as _, CanonicalSerialize as _};
 
+/// Base field element helpers
 pub trait FieldHelpers {
+    /// Create a field from bytes
     fn from_bytes(bytes: Vec<u8>) -> PallasField;
+
+    /// Create a field from hex
     fn from_hex(hex: &str) -> Result<PallasField, &str>;
+
+    /// Serialize to bytes
     fn to_bytes(self) -> Vec<u8>;
+
+    /// Serialize to String
     fn to_string(self) -> String;
 }
 
@@ -43,10 +58,16 @@ impl FieldHelpers for PallasField {
     }
 }
 
+/// Scalar field element helpers
 // TODO: Combine into single Helpers trait (why did rust require two?!)
 pub trait ScalarHelpers {
+    /// Deserialize from hex
     fn from_hex(hex: &str) -> Result<PallasScalar, &str>;
+
+    /// Serialize to bytes
     fn to_bytes(self) -> Vec<u8>;
+
+    /// Serialize to String
     fn to_string(self) -> String;
 }
 

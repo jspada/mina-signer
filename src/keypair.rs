@@ -1,17 +1,26 @@
+//! Keypair structures and algorithms
+//!
+//! Definition of secret key, keypairs and related helpers
+
 use crate::{PallasPoint, PallasScalar, PubKey, PubKeyHelpers, ScalarHelpers};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_ff::UniformRand;
 use rand;
 
+/// Secret key
 pub type SecKey = PallasScalar;
 
+/// Keypair structure
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Keypair {
+    /// Secret key
     pub sec_key: SecKey,
+    /// Public key
     pub pub_key: PubKey,
 }
 
 impl Keypair {
+    /// Generate a random keypair
     pub fn rand() -> Self {
         let sec_key: PallasScalar = PallasScalar::rand(&mut rand::rngs::OsRng);
         let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator()
@@ -21,6 +30,7 @@ impl Keypair {
         Keypair { sec_key, pub_key }
     }
 
+    /// Deserialize a keypair from secret key hex
     pub fn from_hex(sec_key_hex: &str) -> Result<Self, &'static str> {
         let sec_key = PallasScalar::from_hex(sec_key_hex).map_err(|_| "Invalid secret key hex")?;
         let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator()
@@ -30,7 +40,8 @@ impl Keypair {
         Ok(Keypair { sec_key, pub_key })
     }
 
-    pub fn address(self) -> String {
+    /// Obtain the Mina address corresponding to the keypair's public key
+    pub fn get_address(self) -> String {
         self.pub_key.to_address()
     }
 }
@@ -62,8 +73,6 @@ mod tests {
         let kp =
             Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
                 .expect("failed to decode keypair secret key");
-
-        println!("address = {}", kp.pub_key.to_address());
     }
 
     #[test]
@@ -71,7 +80,7 @@ mod tests {
         macro_rules! assert_get_address_eq {
             ($sec_key_hex:expr, $target_address:expr) => {
                 let kp = Keypair::from_hex($sec_key_hex).expect("failed to create keypair");
-                assert_eq!(kp.address(), $target_address);
+                assert_eq!(kp.get_address(), $target_address);
             };
         }
 
