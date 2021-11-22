@@ -1,4 +1,43 @@
 //! Mina signer library for verification and signing
+//!
+//! **Example**
+//!
+//! ```
+//! use signer::{Input, Keypair, NetworkId, ROInput, Signer};
+//!
+//! #[derive(Clone, Copy)]
+//! struct Thing {
+//!     foo: u32,
+//!     bar: u64,
+//! }
+//!
+//! impl Input for Thing {
+//!     fn to_roinput(self) -> ROInput {
+//!         let mut roi = ROInput::new();
+//!
+//!         roi.append_u32(self.foo);
+//!         roi.append_u64(self.bar);
+//!
+//!         roi
+//!     }
+//!
+//!     fn domain_string(self, network_id: NetworkId) -> &'static str {
+//!        match network_id {
+//!            NetworkId::MAINNET => "ThingSigMainnet",
+//!            NetworkId::TESTNET => "ThingSigTestnet",
+//!        }
+//!    }
+//! }
+//!
+//! fn main() {
+//!     let kp = Keypair::rand();
+//!     let thang = Thing { foo: 31, bar: 45 };
+//!
+//!     let mut ctx = signer::create(NetworkId::TESTNET);
+//!     let sig = ctx.sign(kp, thang);
+//!     assert_eq!(ctx.verify(sig, kp.pub_key, thang), true);
+//! }
+//! ```
 #![warn(missing_docs)]
 
 pub mod domain;

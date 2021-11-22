@@ -1,7 +1,7 @@
 pub mod transaction;
 
 use signer::{Keypair, NetworkId, PubKey, PubKeyHelpers, Signer};
-use transaction::Transaction;
+pub use transaction::Transaction;
 
 macro_rules! assert_sign_payment_tx {
     ($sec_key:expr, $source_address:expr, $receiver_address:expr, $amount:expr, $fee:expr,
