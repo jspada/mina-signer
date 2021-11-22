@@ -137,21 +137,18 @@ impl ROInput {
             .chunks(PallasField::size_in_bits() - 1)
             .into_iter()
             .fold(vec![], |mut acc, chunk| {
-                // Clone chunk into a clean copy so that the subsequent
-                // as_raw_slice() only contains the chunk's bits.
+                // Workaround: chunk.clone() does not appear to respect
+                // the chunk's boundaries when it's not byte-aligned.
                 //
-                // A call to chunk.as_raw_slice() returns the bitvec's
-                // underlying memory as bytes, rather than a clean copy
-                // with only the chunk's bits set.  If chunk's size is
-                // not a byte-multiple, then the raw slice contains bits
-                // from the adjacent chunk.
+                // That is,
                 //
-                // To get around this we explicitly allocate a new bitvec of
-                // the appropriate size, zero it and then copy the chunk's bits
-                // into it using clone_from_bitslice().
+                //   let mut bv = chunk.clone().to_bitvec();
+                //   bv.resize(PallasField::size_in_bits(), false);
+                //   fields.push(PallasField::from_bytes(bv.into()));
                 //
-                // N.B. BitVec::from_bitslice() doesn't work because it
-                // appears to copy chunk's raw memory into the new bitvec.
+                // doesn't work.
+                //
+                // Instead we must do
 
                 let mut bv = BitVec::<Lsb0, u8>::new();
                 bv.resize(chunk.len(), false);
@@ -160,7 +157,7 @@ impl ROInput {
                 // extend to the size of a field;
                 bv.resize(PallasField::size_in_bits(), false);
 
-                acc.push(PallasField::from_bytes(bv.as_raw_slice().to_vec()));
+                acc.push(PallasField::from_bytes(bv.into()));
 
                 acc
             });
