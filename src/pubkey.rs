@@ -18,10 +18,10 @@ pub type PubKey = PallasPoint;
 /// Compressed public keys consist of x-coordinate and y-coordinate parity.
 #[derive(Clone, Copy)]
 pub struct CompressedPubKey {
-    /// x-coordinate
+    /// X-coordinate
     pub x: PallasField,
 
-    /// y-coordinate parity
+    /// Parity of y-coordinate
     pub is_odd: bool,
 }
 

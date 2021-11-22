@@ -6,21 +6,23 @@ use ark_ec::AffineCurve;
 use ark_ff::PrimeField; // for into_repr()
 
 use mina_curves::pasta::pallas as Pallas;
+
+// Affine curve point
 pub use Pallas::Affine as PallasPoint;
 
-/// Base field
+/// Base field element
 pub type PallasField = <PallasPoint as AffineCurve>::BaseField;
-/// Scalar field
+/// Scalar field element
 pub type PallasScalar = <PallasPoint as AffineCurve>::ScalarField;
 
 use ark_serialize::{CanonicalDeserialize as _, CanonicalSerialize as _};
 
 /// Base field element helpers
 pub trait FieldHelpers {
-    /// Create a field from bytes
+    /// Deserialize from bytes
     fn from_bytes(bytes: Vec<u8>) -> PallasField;
 
-    /// Create a field from hex
+    /// Deserialize from hex
     fn from_hex(hex: &str) -> Result<PallasField, &str>;
 
     /// Serialize to bytes
