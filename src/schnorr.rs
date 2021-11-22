@@ -107,7 +107,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         self.sponge.squeeze();
 
         // Absorb random oracle input
-        self.sponge.absorb(&roi.to_fields()[..]);
+        self.sponge.absorb(&roi.to_fields());
 
         // Squeeze and convert from field element to scalar
         PallasScalar::from_repr(self.sponge.squeeze().into_repr()).expect("failed to create scalar")
