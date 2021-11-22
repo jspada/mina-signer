@@ -1,5 +1,6 @@
-use super::*;
 use std::fmt;
+
+use crate::{FieldHelpers, PallasField, PallasScalar, ScalarHelpers};
 
 #[derive(Clone, Copy)]
 pub struct Signature {

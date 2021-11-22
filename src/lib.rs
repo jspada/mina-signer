@@ -21,7 +21,6 @@ use oracle::{
 };
 
 #[derive(Copy, Clone)]
-#[repr(u8)]
 pub enum NetworkId {
     TESTNET = 0x00,
     MAINNET = 0x01,

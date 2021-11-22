@@ -17,10 +17,6 @@ pub trait FieldHelpers {
 
 impl FieldHelpers for PallasField {
     fn from_hex(hex: &str) -> Result<PallasField, &str> {
-        if hex.len() != 64 {
-            return Err("Invalid field hex length");
-        }
-
         let bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode field hex")?;
 
         PallasField::deserialize(&mut &bytes[..]).map_err(|_| "Failed to deserialize field bytes")
@@ -34,7 +30,7 @@ impl FieldHelpers for PallasField {
         let mut bytes: Vec<u8> = vec![];
         self.into_repr()
             .serialize(&mut bytes)
-            .expect("Failed to serialize field"); // TODO: OK error handling?
+            .expect("Failed to serialize field");
 
         bytes
     }
@@ -56,10 +52,6 @@ pub trait ScalarHelpers {
 
 impl ScalarHelpers for PallasScalar {
     fn from_hex(hex: &str) -> Result<PallasScalar, &str> {
-        if hex.len() != 64 {
-            return Err("Invalid scalar hex length");
-        }
-
         let mut bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode scalar hex")?;
         bytes.reverse(); // mina scalars hex format is in big-endian order
 
@@ -70,7 +62,7 @@ impl ScalarHelpers for PallasScalar {
         let mut bytes: Vec<u8> = vec![];
         self.into_repr()
             .serialize(&mut bytes)
-            .expect("failed to serialize scalar"); // TODO: OK error handling?
+            .expect("failed to serialize scalar");
 
         bytes
     }
@@ -89,18 +81,21 @@ mod tests {
 
     #[test]
     fn field_from_hex() {
-        assert_eq!(PallasField::from_hex(""), Err("Invalid field hex length"));
+        assert_eq!(
+            PallasField::from_hex(""),
+            Err("Failed to deserialize field bytes")
+        );
         assert_eq!(
             PallasField::from_hex(
                 "1428fadcf0c02396e620f14f176fddb5d769b7de2027469d027a80142ef8f07"
             ),
-            Err("Invalid field hex length")
+            Err("Failed to decode field hex")
         );
         assert_eq!(
             PallasField::from_hex(
                 "0f5314f176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"
             ),
-            Err("Invalid field hex length")
+            Err("Failed to decode field hex")
         );
         assert_eq!(
             PallasField::from_hex(
@@ -126,18 +121,21 @@ mod tests {
 
     #[test]
     fn scalar_from_hex() {
-        assert_eq!(PallasScalar::from_hex(""), Err("Invalid scalar hex length"));
+        assert_eq!(
+            PallasScalar::from_hex(""),
+            Err("Failed to deserialize scalar bytes")
+        );
         assert_eq!(
             PallasScalar::from_hex(
                 "1428fadcf0c02396e620f14f176fddb5d769b7de2027469d027a80142ef8f07"
             ),
-            Err("Invalid scalar hex length")
+            Err("Failed to decode scalar hex")
         );
         assert_eq!(
             PallasScalar::from_hex(
                 "0f5314f176fddb5d769b7de2027469d027ad428fadcf0c02396e6280142efb7d8"
             ),
-            Err("Invalid scalar hex length")
+            Err("Failed to decode scalar hex")
         );
         assert_eq!(
             PallasScalar::from_hex(

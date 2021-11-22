@@ -1,4 +1,4 @@
-use super::*;
+use crate::{FieldHelpers, NetworkId, PallasField, PallasScalar, ScalarHelpers};
 use ark_ff::PrimeField;
 use bitvec::{prelude::*, view::AsBits};
 

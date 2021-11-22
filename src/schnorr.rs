@@ -1,4 +1,3 @@
-use super::*;
 use ark_ec::{
     AffineCurve,     // for prime_subgroup_generator()
     ProjectiveCurve, // for into_affine()
@@ -13,7 +12,16 @@ use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
+use oracle::{
+    poseidon::SpongeConstants,
+    rndoracle::{ArithmeticSponge, Sponge},
+};
 use std::ops::Neg;
+
+use crate::{
+    FieldHelpers, Input, Keypair, NetworkId, PallasField, PallasPoint, PallasScalar, PubKey,
+    ROInput, Signature, Signer,
+};
 
 pub struct Schnorr<SC: SpongeConstants> {
     pub sponge: ArithmeticSponge<PallasField, SC>,
