@@ -1,6 +1,7 @@
 pub mod transaction;
 
-use signer::{Keypair, NetworkId, PubKey, PubKeyHelpers, Signer};
+use ark_ff::Zero;
+use signer::{Keypair, NetworkId, PallasField, PallasScalar, PubKey, PubKeyHelpers, Signer};
 pub use transaction::Transaction;
 
 macro_rules! assert_sign_payment_tx {
@@ -116,6 +117,35 @@ fn signer_test_raw() {
 
     assert_eq!(sig.to_string(),
                 "11a36a8dfe5b857b95a2a7b7b17c62c3ea33411ae6f4eb3a907064aecae353c60794f1d0288322fe3f8bb69d6fabd4fd7c15f8d09f8783b2f087a80407e299af");
+}
+
+#[test]
+fn signer_zero_test() {
+    let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
+        .expect("failed to create keypair");
+    let tx = Transaction::new_payment(
+        kp.pub_key,
+        PubKey::from_address("B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt")
+            .expect("invalid address"),
+        1729000000000,
+        2000000000,
+        16,
+    );
+
+    let mut ctx = signer::create(NetworkId::TESTNET);
+    let sig = ctx.sign(kp, tx);
+
+    assert_eq!(ctx.verify(sig, kp.pub_key, tx), true);
+
+    // Zero some things
+    let mut sig2 = sig;
+    sig2.rx = PallasField::zero();
+    assert_eq!(ctx.verify(sig2, kp.pub_key, tx), false);
+    let mut sig3 = sig;
+    sig3.s = PallasScalar::zero();
+    assert_eq!(ctx.verify(sig3, kp.pub_key, tx), false);
+    sig3.rx = PallasField::zero();
+    assert_eq!(ctx.verify(sig3, kp.pub_key, tx), false);
 }
 
 #[test]

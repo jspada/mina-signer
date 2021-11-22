@@ -29,14 +29,12 @@
 //!    }
 //! }
 //!
-//! fn main() {
-//!     let kp = Keypair::rand();
-//!     let thang = Thing { foo: 31, bar: 45 };
+//! let kp = Keypair::rand();
+//! let thang = Thing { foo: 31, bar: 45 };
 //!
-//!     let mut ctx = signer::create(NetworkId::TESTNET);
-//!     let sig = ctx.sign(kp, thang);
-//!     assert_eq!(ctx.verify(sig, kp.pub_key, thang), true);
-//! }
+//! let mut ctx = signer::create(NetworkId::TESTNET);
+//! let sig = ctx.sign(kp, thang);
+//! assert_eq!(ctx.verify(sig, kp.pub_key, thang), true);
 //! ```
 #![warn(missing_docs)]
 
