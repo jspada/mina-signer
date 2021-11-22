@@ -100,7 +100,7 @@ impl PubKeyHelpers for PubKey {
             return Err("Invalid address version info");
         }
 
-        let x = PallasField::from_bytes(x_bytes.to_vec());
+        let x = PallasField::from_bytes(x_bytes);
         let mut pt =
             PallasPoint::get_point_from_x(x, y_parity).ok_or("Invalid address x-coordinate")?;
 

@@ -99,18 +99,18 @@ impl ROInput {
     }
 
     /// Append bytes
-    pub fn append_bytes(&mut self, bytes: Vec<u8>) {
+    pub fn append_bytes(&mut self, bytes: &[u8]) {
         self.bits.extend_from_bitslice(bytes.as_bits::<Lsb0>());
     }
 
     /// Append a 32-bit unsigned integer
     pub fn append_u32(&mut self, x: u32) {
-        self.append_bytes(x.to_le_bytes().to_vec());
+        self.append_bytes(&x.to_le_bytes());
     }
 
     /// Append a 64-bit unsigned integer
     pub fn append_u64(&mut self, x: u64) {
-        self.append_bytes(x.to_le_bytes().to_vec());
+        self.append_bytes(&x.to_le_bytes());
     }
 
     /// Serialize random oracle input to bytes
@@ -157,7 +157,7 @@ impl ROInput {
                 // extend to the size of a field;
                 bv.resize(PallasField::size_in_bits(), false);
 
-                acc.push(PallasField::from_bytes(bv.into()));
+                acc.push(PallasField::from_bytes(&bv.into_vec()));
 
                 acc
             });
@@ -210,7 +210,7 @@ mod tests {
     #[test]
     fn append_byte() {
         let mut roi: ROInput = ROInput::new();
-        roi.append_bytes(vec![0x01]);
+        roi.append_bytes(&vec![0x01]);
         assert!(roi.bits.len() == 8);
         assert!(roi.bits.as_raw_slice() == [0x01]);
     }
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn append_two_bytes() {
         let mut roi: ROInput = ROInput::new();
-        roi.append_bytes(vec![0x10, 0xac]);
+        roi.append_bytes(&vec![0x10, 0xac]);
         assert!(roi.bits.len() == 16);
         assert!(roi.bits.as_raw_slice() == [0x10, 0xac]);
     }
@@ -226,7 +226,7 @@ mod tests {
     #[test]
     fn append_five_bytes() {
         let mut roi: ROInput = ROInput::new();
-        roi.append_bytes(vec![0x10, 0xac, 0x01, 0xeb, 0xca]);
+        roi.append_bytes(&vec![0x10, 0xac, 0x01, 0xeb, 0xca]);
         assert!(roi.bits.len() == 40);
         assert!(roi.bits.as_raw_slice() == [0x10, 0xac, 0x01, 0xeb, 0xca]);
     }
@@ -266,7 +266,7 @@ mod tests {
         .expect("failed to create scalar");
         let mut roi: ROInput = ROInput::new();
         roi.append_scalar(scalar);
-        roi.append_bytes(vec![0x01]);
+        roi.append_bytes(&vec![0x01]);
         assert!(roi.bits.len() == 263);
         assert!(
             roi.bits.as_raw_slice()
@@ -316,7 +316,7 @@ mod tests {
         .expect("failed to create scalar");
         let mut roi: ROInput = ROInput::new();
         roi.append_scalar(scalar1);
-        roi.append_bytes(vec![0x2a]);
+        roi.append_bytes(&vec![0x2a]);
         roi.append_scalar(scalar2);
         assert!(roi.bits.len() == 518);
         assert!(
@@ -385,7 +385,7 @@ mod tests {
             .expect("failed to create scalar"),
         );
         roi.append_u64(18446744073709551557);
-        roi.append_bytes(vec![0xba, 0xdc, 0x0f, 0xfe]);
+        roi.append_bytes(&vec![0xba, 0xdc, 0x0f, 0xfe]);
         roi.append_scalar(
             PallasScalar::from_hex(
                 "1018176fd80cfa457b14deebea52a67f28d86fa73d43d089445225b1e98701e7",
@@ -419,7 +419,7 @@ mod tests {
         roi.append_bit(true); // fee payer pk odd
         roi.append_u32(0); // nonce
         roi.append_u32(u32::MAX); // valid_until
-        roi.append_bytes(vec![0; 34]); // memo
+        roi.append_bytes(&vec![0; 34]); // memo
         roi.append_bit(false); // tags[0]
         roi.append_bit(false); // tags[1]
         roi.append_bit(false); // tags[2]
@@ -434,7 +434,7 @@ mod tests {
             )
             .expect("failed to create scalar"),
         );
-        roi.append_bytes(vec![0x01]);
+        roi.append_bytes(&vec![0x01]);
         assert_eq!(roi.bits.len(), 862);
         assert_eq!(
             roi.bits.as_raw_slice(),
@@ -858,7 +858,7 @@ mod tests {
         roi.append_bit(true); // fee payer pk odd
         roi.append_u32(0); // nonce
         roi.append_u32(u32::MAX); // valid_until
-        roi.append_bytes(vec![0; 34]); // memo
+        roi.append_bytes(&vec![0; 34]); // memo
         roi.append_bit(false); // tags[0]
         roi.append_bit(false); // tags[1]
         roi.append_bit(false); // tags[2]

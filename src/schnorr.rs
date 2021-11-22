@@ -90,7 +90,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         roi.append_field(kp.pub_key.x);
         roi.append_field(kp.pub_key.y);
         roi.append_scalar(kp.sec_key);
-        roi.append_bytes(vec![self.network_id.into()]);
+        roi.append_bytes(&[self.network_id.into()]);
 
         hasher.update(roi.to_bytes());
 
@@ -113,7 +113,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         // Set sponge initial state (explicitly init state so signer context can be reused)
         self.sponge.state = vec![PallasField::zero(); self.sponge.state.len()];
         self.sponge
-            .absorb(&[PallasField::from_bytes(self.domain_bytes(input))]);
+            .absorb(&[PallasField::from_bytes(&self.domain_bytes(input))]);
         self.sponge.squeeze();
 
         // Absorb random oracle input

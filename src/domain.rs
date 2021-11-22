@@ -19,7 +19,7 @@ use ark_serialize::{CanonicalDeserialize as _, CanonicalSerialize as _};
 /// Base field element helpers
 pub trait FieldHelpers {
     /// Deserialize from bytes
-    fn from_bytes(bytes: Vec<u8>) -> PallasField;
+    fn from_bytes(bytes: &[u8]) -> PallasField;
 
     /// Deserialize from hex
     fn from_hex(hex: &str) -> Result<PallasField, &str>;
@@ -38,8 +38,8 @@ impl FieldHelpers for PallasField {
         PallasField::deserialize(&mut &bytes[..]).map_err(|_| "Failed to deserialize field bytes")
     }
 
-    fn from_bytes(bytes: Vec<u8>) -> PallasField {
-        PallasField::deserialize(&mut &bytes[..]).expect("failed to deserialize field")
+    fn from_bytes(bytes: &[u8]) -> PallasField {
+        PallasField::deserialize(&mut &*bytes).expect("failed to deserialize field")
     }
 
     fn to_bytes(self) -> Vec<u8> {
@@ -53,7 +53,7 @@ impl FieldHelpers for PallasField {
 
     fn to_hex(self) -> String {
         let mut bytes = self.to_bytes();
-        bytes.reverse();
+        bytes.reverse(); // mina order
 
         hex::encode(bytes)
     }
@@ -91,7 +91,7 @@ impl ScalarHelpers for PallasScalar {
 
     fn to_hex(self) -> String {
         let mut bytes = self.to_bytes();
-        bytes.reverse();
+        bytes.reverse(); // mina order
 
         hex::encode(bytes)
     }

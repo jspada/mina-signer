@@ -36,7 +36,7 @@ impl Input for Transaction {
         roi.append_bit(self.fee_payer_pk.is_odd);
         roi.append_u32(self.nonce);
         roi.append_u32(self.valid_until);
-        roi.append_bytes(self.memo.to_vec());
+        roi.append_bytes(&self.memo);
 
         for tag_bit in self.tag {
             roi.append_bit(tag_bit);
