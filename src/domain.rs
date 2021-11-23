@@ -32,14 +32,14 @@ pub trait FieldHelpers {
 }
 
 impl FieldHelpers for BaseField {
+    fn from_bytes(bytes: &[u8]) -> BaseField {
+        BaseField::deserialize(&mut &*bytes).expect("failed to deserialize field")
+    }
+
     fn from_hex(hex: &str) -> Result<BaseField, &str> {
         let bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode field hex")?;
 
         BaseField::deserialize(&mut &bytes[..]).map_err(|_| "Failed to deserialize field bytes")
-    }
-
-    fn from_bytes(bytes: &[u8]) -> BaseField {
-        BaseField::deserialize(&mut &*bytes).expect("failed to deserialize field")
     }
 
     fn to_bytes(self) -> Vec<u8> {
@@ -62,6 +62,9 @@ impl FieldHelpers for BaseField {
 /// Scalar field element helpers
 // TODO: Combine into single Helpers trait (why did rust require two?!)
 pub trait ScalarHelpers {
+    /// Deserialize from bytes
+    fn from_bytes(bytes: &[u8]) -> ScalarField;
+
     /// Deserialize from hex
     fn from_hex(hex: &str) -> Result<ScalarField, &str>;
 
@@ -73,6 +76,10 @@ pub trait ScalarHelpers {
 }
 
 impl ScalarHelpers for ScalarField {
+    fn from_bytes(bytes: &[u8]) -> ScalarField {
+        ScalarField::deserialize(&mut &*bytes).expect("failed to deserialize scalar")
+    }
+
     fn from_hex(hex: &str) -> Result<ScalarField, &str> {
         let mut bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode scalar hex")?;
         bytes.reverse(); // mina scalars hex format is in big-endian order
