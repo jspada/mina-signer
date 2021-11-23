@@ -55,9 +55,14 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
         let sv: CurvePoint = CurvePoint::prime_subgroup_generator()
             .mul(sig.s)
             .into_affine();
-        let rv: CurvePoint = sv + public.mul(ev).neg().into_affine();
+        // Perform addition and infinity check in projective coordinates for performance
+        let rv = public.mul(ev).neg().add_mixed(&sv);
+        if rv.is_zero() {
+            return false;
+        }
+        let rv = rv.into_affine();
 
-        !rv.infinity && rv.y.into_repr().is_even() && rv.x == sig.rx
+        rv.y.into_repr().is_even() && rv.x == sig.rx
     }
 }
 
