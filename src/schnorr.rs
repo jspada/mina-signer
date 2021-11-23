@@ -25,37 +25,37 @@ use oracle::{
 use std::ops::Neg;
 
 use crate::{
-    FieldHelpers, Input, Keypair, NetworkId, PallasField, PallasPoint, PallasScalar, PubKey,
-    ROInput, Signature, Signer,
+    BaseField, CurvePoint, FieldHelpers, Input, Keypair, NetworkId, PubKey, ROInput, ScalarField,
+    Signature, Signer,
 };
 
 /// Schnorr signer context for the Mina signature algorithm
 ///
 /// For details about the signature algorithm please see [crate::schnorr]
 pub struct Schnorr<SC: SpongeConstants> {
-    sponge: ArithmeticSponge<PallasField, SC>,
+    sponge: ArithmeticSponge<BaseField, SC>,
     network_id: NetworkId,
 }
 
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
     fn sign<I: Input>(&mut self, kp: Keypair, input: I) -> Signature {
-        let k: PallasScalar = self.blinding_hash(&kp, input);
-        let r: PallasPoint = PallasPoint::prime_subgroup_generator().mul(k).into_affine();
-        let k: PallasScalar = if r.y.into_repr().is_even() { k } else { -k };
+        let k: ScalarField = self.blinding_hash(&kp, input);
+        let r: CurvePoint = CurvePoint::prime_subgroup_generator().mul(k).into_affine();
+        let k: ScalarField = if r.y.into_repr().is_even() { k } else { -k };
 
-        let e: PallasScalar = self.message_hash(&kp.public, r.x, input);
-        let s: PallasScalar = k + e * kp.secret;
+        let e: ScalarField = self.message_hash(&kp.public, r.x, input);
+        let s: ScalarField = k + e * kp.secret;
 
         Signature::new(r.x, s)
     }
 
     fn verify<I: Input>(&mut self, sig: Signature, public: PubKey, input: I) -> bool {
-        let ev: PallasScalar = self.message_hash(&public, sig.rx, input);
+        let ev: ScalarField = self.message_hash(&public, sig.rx, input);
 
-        let sv: PallasPoint = PallasPoint::prime_subgroup_generator()
+        let sv: CurvePoint = CurvePoint::prime_subgroup_generator()
             .mul(sig.s)
             .into_affine();
-        let rv: PallasPoint = sv + public.mul(ev).neg().into_affine();
+        let rv: CurvePoint = sv + public.mul(ev).neg().into_affine();
 
         !rv.infinity && rv.y.into_repr().is_even() && rv.x == sig.rx
     }
@@ -63,7 +63,7 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
 
 impl<SC: SpongeConstants> Schnorr<SC> {
     /// Create a new Schnorr signer context for network instance `network_id` using arithmetic sponge defined by `sponge`.
-    pub fn new(sponge: ArithmeticSponge<PallasField, SC>, network_id: NetworkId) -> Self {
+    pub fn new(sponge: ArithmeticSponge<BaseField, SC>, network_id: NetworkId) -> Self {
         Schnorr::<SC> { sponge, network_id }
     }
 
@@ -81,7 +81,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         bytes
     }
 
-    fn blinding_hash<I>(&mut self, kp: &Keypair, input: I) -> PallasScalar
+    fn blinding_hash<I>(&mut self, kp: &Keypair, input: I) -> ScalarField
     where
         I: Input,
     {
@@ -99,10 +99,10 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         hasher.finalize_variable(|out| bytes.copy_from_slice(out));
         bytes[bytes.len() - 1] &= 0b0011_1111; // drop top two bits
 
-        PallasScalar::from_random_bytes(&bytes[..]).expect("failed to create scalar from bytes")
+        ScalarField::from_random_bytes(&bytes[..]).expect("failed to create scalar from bytes")
     }
 
-    fn message_hash<I>(&mut self, pub_key: &PubKey, rx: PallasField, input: I) -> PallasScalar
+    fn message_hash<I>(&mut self, pub_key: &PubKey, rx: BaseField, input: I) -> ScalarField
     where
         I: Input,
     {
@@ -112,9 +112,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         roi.append_field(rx);
 
         // Set sponge initial state (explicitly init state so signer context can be reused)
-        self.sponge.state = vec![PallasField::zero(); self.sponge.state.len()];
+        self.sponge.state = vec![BaseField::zero(); self.sponge.state.len()];
         self.sponge
-            .absorb(&[PallasField::from_bytes(&self.domain_bytes(input))]);
+            .absorb(&[BaseField::from_bytes(&self.domain_bytes(input))]);
         self.sponge.squeeze();
 
         // Absorb random oracle input
@@ -123,6 +123,6 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         // Squeeze and convert from base field element to scalar field element
         // Since the difference in modulus between the two fields is < 2^125, w.h.p., a
         // random value from one field will fit in the other field.
-        PallasScalar::from_repr(self.sponge.squeeze().into_repr()).expect("failed to create scalar")
+        ScalarField::from_repr(self.sponge.squeeze().into_repr()).expect("failed to create scalar")
     }
 }

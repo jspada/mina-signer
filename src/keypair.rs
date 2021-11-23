@@ -2,13 +2,13 @@
 //!
 //! Definition of secret key, keypairs and related helpers
 
-use crate::{PallasPoint, PallasScalar, PubKey, PubKeyHelpers, ScalarHelpers};
+use crate::{CurvePoint, PubKey, PubKeyHelpers, ScalarField, ScalarHelpers};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_ff::UniformRand;
 use rand;
 
 /// Secret key
-pub type SecKey = PallasScalar;
+pub type SecKey = ScalarField;
 
 /// Keypair structure
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -22,8 +22,8 @@ pub struct Keypair {
 impl Keypair {
     /// Generate a random keypair
     pub fn rand() -> Self {
-        let secret: PallasScalar = PallasScalar::rand(&mut rand::rngs::OsRng);
-        let public: PallasPoint = PallasPoint::prime_subgroup_generator()
+        let secret: ScalarField = ScalarField::rand(&mut rand::rngs::OsRng);
+        let public: CurvePoint = CurvePoint::prime_subgroup_generator()
             .mul(secret)
             .into_affine();
 
@@ -32,8 +32,8 @@ impl Keypair {
 
     /// Deserialize a keypair from secret key hex
     pub fn from_hex(secret_hex: &str) -> Result<Self, &'static str> {
-        let secret = PallasScalar::from_hex(secret_hex).map_err(|_| "Invalid secret key hex")?;
-        let public: PallasPoint = PallasPoint::prime_subgroup_generator()
+        let secret = ScalarField::from_hex(secret_hex).map_err(|_| "Invalid secret key hex")?;
+        let public: CurvePoint = CurvePoint::prime_subgroup_generator()
             .mul(secret)
             .into_affine();
 

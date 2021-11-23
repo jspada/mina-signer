@@ -3,7 +3,7 @@
 //! Definition of random oracle input structure and
 //! methods for serializing into bytes and field elements
 
-use crate::{FieldHelpers, NetworkId, PallasField, PallasScalar, ScalarHelpers};
+use crate::{BaseField, FieldHelpers, NetworkId, ScalarField, ScalarHelpers};
 use ark_ff::PrimeField;
 use bitvec::{prelude::*, view::AsBits};
 
@@ -68,7 +68,7 @@ pub trait Input: Copy {
 
 #[derive(Default)]
 pub struct ROInput {
-    fields: Vec<PallasField>,
+    fields: Vec<BaseField>,
     bits: BitVec<Lsb0, u8>,
 }
 
@@ -82,15 +82,15 @@ impl ROInput {
     }
 
     /// Append a base field element
-    pub fn append_field(&mut self, f: PallasField) {
+    pub fn append_field(&mut self, f: BaseField) {
         self.fields.push(f);
     }
 
     /// Append a scalar field element
-    pub fn append_scalar(&mut self, s: PallasScalar) {
+    pub fn append_scalar(&mut self, s: ScalarField) {
         // mina scalars are 255 bytes
         let bytes = s.to_bytes(); // TODO: Combine these two into one-liner
-        let bits = &bytes.as_bits::<Lsb0>()[..PallasScalar::size_in_bits()];
+        let bits = &bytes.as_bits::<Lsb0>()[..ScalarField::size_in_bits()];
         self.bits.extend(bits);
     }
 
@@ -117,9 +117,7 @@ impl ROInput {
     /// Serialize random oracle input to bytes
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bits: BitVec<Lsb0, u8> = self.fields.iter().fold(BitVec::new(), |mut acc, fe| {
-            acc.extend_from_bitslice(
-                &fe.to_bytes().as_bits::<Lsb0>()[..PallasField::size_in_bits()],
-            );
+            acc.extend_from_bitslice(&fe.to_bytes().as_bits::<Lsb0>()[..BaseField::size_in_bits()]);
 
             acc
         });
@@ -130,12 +128,12 @@ impl ROInput {
     }
 
     /// Serialize random oracle input to vector of base field elements
-    pub fn to_fields(&self) -> Vec<PallasField> {
-        let mut fields: Vec<PallasField> = self.fields.clone();
+    pub fn to_fields(&self) -> Vec<BaseField> {
+        let mut fields: Vec<BaseField> = self.fields.clone();
 
         let bits_as_fields = self
             .bits
-            .chunks(PallasField::size_in_bits() - 1)
+            .chunks(BaseField::size_in_bits() - 1)
             .into_iter()
             .fold(vec![], |mut acc, chunk| {
                 // Workaround: chunk.clone() does not appear to respect
@@ -144,8 +142,8 @@ impl ROInput {
                 // That is,
                 //
                 //   let mut bv = chunk.clone().to_bitvec();
-                //   bv.resize(PallasField::size_in_bits(), false);
-                //   fields.push(PallasField::from_bytes(bv.into()));
+                //   bv.resize(BaseField::size_in_bits(), false);
+                //   fields.push(BaseField::from_bytes(bv.into()));
                 //
                 // doesn't work.
                 //
@@ -156,9 +154,9 @@ impl ROInput {
                 bv.clone_from_bitslice(chunk);
 
                 // extend to the size of a field;
-                bv.resize(PallasField::size_in_bits(), false);
+                bv.resize(BaseField::size_in_bits(), false);
 
-                acc.push(PallasField::from_bytes(&bv.into_vec()));
+                acc.push(BaseField::from_bytes(&bv.into_vec()));
 
                 acc
             });
@@ -228,7 +226,7 @@ mod tests {
 
     #[test]
     fn append_scalar() {
-        let scalar = PallasScalar::from_hex(
+        let scalar = ScalarField::from_hex(
             "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
         )
         .expect("failed to create scalar");
@@ -255,7 +253,7 @@ mod tests {
 
     #[test]
     fn append_scalar_and_byte() {
-        let scalar = PallasScalar::from_hex(
+        let scalar = ScalarField::from_hex(
             "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
         )
         .expect("failed to create scalar");
@@ -275,11 +273,11 @@ mod tests {
 
     #[test]
     fn append_two_scalars() {
-        let scalar1 = PallasScalar::from_hex(
+        let scalar1 = ScalarField::from_hex(
             "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
         )
         .expect("failed to create scalar");
-        let scalar2 = PallasScalar::from_hex(
+        let scalar2 = ScalarField::from_hex(
             "05e84aeb13bfe967e9c5e842b795cbdbabff0e4e1348752741e35b8348e9b1a1",
         )
         .expect("failed to create scalar");
@@ -301,11 +299,11 @@ mod tests {
 
     #[test]
     fn append_two_scalars_and_byte() {
-        let scalar1 = PallasScalar::from_hex(
+        let scalar1 = ScalarField::from_hex(
             "1fbdb2a799ae51d482cd433f6e7a8c26c34c329eba7f74cbc7e18c5b4f6fdb60",
         )
         .expect("failed to create scalar");
-        let scalar2 = PallasScalar::from_hex(
+        let scalar2 = ScalarField::from_hex(
             "07cd3821f100189d9ceffe2acfd88e4b409fb94e5a3ee2f358ebbc06b17577fe",
         )
         .expect("failed to create scalar");
@@ -374,7 +372,7 @@ mod tests {
         let mut roi: ROInput = ROInput::new();
         roi.append_bit(true);
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "02a1d7e72199794b83c8b4d44c480fd7a38d1736345acfa9d28c1cb25d75d101",
             )
             .expect("failed to create scalar"),
@@ -382,7 +380,7 @@ mod tests {
         roi.append_u64(18446744073709551557);
         roi.append_bytes(&vec![0xba, 0xdc, 0x0f, 0xfe]);
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "1018176fd80cfa457b14deebea52a67f28d86fa73d43d089445225b1e98701e7",
             )
             .expect("failed to create scalar"),
@@ -424,7 +422,7 @@ mod tests {
         roi.append_u64(10000000000); // amount
         roi.append_bit(false); // token_locked
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "2d6d5f0550d4a730ddba8d2d53be94380e89093cf6758e277a0bca17307a21de",
             )
             .expect("failed to create scalar"),
@@ -450,10 +448,8 @@ mod tests {
     fn append_field() {
         let mut roi = ROInput::new();
         roi.append_field(
-            PallasField::from_hex(
-                "2eaedae42a7461d5952d27b97ecad068b698ebb94e8a0e4c45388bb613de7e08",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("2eaedae42a7461d5952d27b97ecad068b698ebb94e8a0e4c45388bb613de7e08")
+                .expect("failed to create field"),
         );
 
         assert_eq!(
@@ -470,16 +466,12 @@ mod tests {
     fn append_two_fields() {
         let mut roi = ROInput::new();
         roi.append_field(
-            PallasField::from_hex(
-                "0cdaf334e9632268a5aa959c2781fb32bf45565fe244ae42c849d3fdc7c6441d",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("0cdaf334e9632268a5aa959c2781fb32bf45565fe244ae42c849d3fdc7c6441d")
+                .expect("failed to create field"),
         );
         roi.append_field(
-            PallasField::from_hex(
-                "2eaedae42a7461d5952d27b97ecad068b698ebb94e8a0e4c45388bb613de7e08",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("2eaedae42a7461d5952d27b97ecad068b698ebb94e8a0e4c45388bb613de7e08")
+                .expect("failed to create field"),
         );
 
         assert_eq!(
@@ -498,22 +490,16 @@ mod tests {
     fn append_three_fields() {
         let mut roi = ROInput::new();
         roi.append_field(
-            PallasField::from_hex(
-                "1f3f142986041b54427aa2032632e34df2fa9bde9bce70c04c5034266619e529",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("1f3f142986041b54427aa2032632e34df2fa9bde9bce70c04c5034266619e529")
+                .expect("failed to create field"),
         );
         roi.append_field(
-            PallasField::from_hex(
-                "37f4433b85e753a91a1d79751645f1448954c433f9492e36a933ca7f3df61a04",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("37f4433b85e753a91a1d79751645f1448954c433f9492e36a933ca7f3df61a04")
+                .expect("failed to create field"),
         );
         roi.append_field(
-            PallasField::from_hex(
-                "6cf4772d3e1aab98a2b514b73a4f6e0df1fb4f703ecfa762196b22c26da4341c",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("6cf4772d3e1aab98a2b514b73a4f6e0df1fb4f703ecfa762196b22c26da4341c")
+                .expect("failed to create field"),
         );
 
         assert_eq!(
@@ -534,13 +520,11 @@ mod tests {
     fn append_field_and_scalar() {
         let mut roi = ROInput::new();
         roi.append_field(
-            PallasField::from_hex(
-                "64cde530327a36fcb88b6d769adca9b7c5d266e7d0042482203f3fd3a0d71721",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("64cde530327a36fcb88b6d769adca9b7c5d266e7d0042482203f3fd3a0d71721")
+                .expect("failed to create field"),
         );
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "32648cf979e395ef5bc9274ca67bd6049bbdc511eed73f78db55a4dad0554360",
             )
             .expect("failed to create scalar"),
@@ -562,14 +546,12 @@ mod tests {
     fn append_field_bit_and_scalar() {
         let mut roi = ROInput::new();
         roi.append_field(
-            PallasField::from_hex(
-                "d897c7a8b811d8acd3eeaa4adf42292802eed80031c2ad7c8989aea1fe94322c",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("d897c7a8b811d8acd3eeaa4adf42292802eed80031c2ad7c8989aea1fe94322c")
+                .expect("failed to create field"),
         );
         roi.append_bit(false);
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "282bd473ffc218d8e46c83060fa56c058f5076cae0abb291893cb5b8c66c5879",
             )
             .expect("failed to create scalar"),
@@ -591,21 +573,17 @@ mod tests {
     fn to_bytes() {
         let mut roi = ROInput::new();
         roi.append_field(
-            PallasField::from_hex(
-                "a5984f2bd00906f9a86e75bfb4b2c3625f1a0d1cfacc1501e8e82ae7041efc14",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("a5984f2bd00906f9a86e75bfb4b2c3625f1a0d1cfacc1501e8e82ae7041efc14")
+                .expect("failed to create field"),
         );
         roi.append_field(
-            PallasField::from_hex(
-                "8af0bc770d49a5b9fcabfcdd033bab470b2a211ef80b710efe71315cfa818c0a",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("8af0bc770d49a5b9fcabfcdd033bab470b2a211ef80b710efe71315cfa818c0a")
+                .expect("failed to create field"),
         );
         roi.append_bit(false);
         roi.append_u32(314u32);
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "238344cc01fd5d8cfc7c69cc4a7497bcdb3cb9810d0f8b571615dc3da2433cc2",
             )
             .expect("failed to create scalar"),
@@ -630,7 +608,7 @@ mod tests {
     fn to_fields_1_scalar() {
         let mut roi = ROInput::new();
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "25a6f0854fb5a0e31efa844f50788cbc162b0998708806c040f663ffd86d495d",
             )
             .expect("failed to create scalar"),
@@ -648,11 +626,11 @@ mod tests {
         assert_eq!(
             roi.to_fields(),
             [
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "5d496dd8ff63f640c006887098092b16bc8c78504f84fa1ee3a0b54f85f0a625"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "0000000000000000000000000000000000000000000000000000000000000000"
                 )
                 .expect("failed to create field"),
@@ -664,7 +642,7 @@ mod tests {
     fn to_fields_1_scalar_2_bits() {
         let mut roi = ROInput::new();
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "3073e402aa9e8a5e710f0723d1daa690efe6b0f666733d0e0d7b418c1c96a9e8",
             )
             .expect("failed to create scalar"),
@@ -684,11 +662,11 @@ mod tests {
         assert_eq!(
             roi.to_fields(),
             [
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "e8a9961c8c417b0d0e3d7366f6b0e6ef90a6dad123070f715e8a9eaa02e47330"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "0400000000000000000000000000000000000000000000000000000000000000"
                 )
                 .expect("failed to create field"),
@@ -700,13 +678,13 @@ mod tests {
     fn to_fields_2_scalars() {
         let mut roi = ROInput::new();
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "22dd2d351da264714087f6cf7610450828f54a2021fdc86b0dc27ec1d2255ce0",
             )
             .expect("failed to create scalar"),
         );
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "0fdf36dd85d3c42fee85c86e36642551efc1a6ff0d32e01888507894b3db56c3",
             )
             .expect("failed to create scalar"),
@@ -726,15 +704,15 @@ mod tests {
         assert_eq!(
             roi.to_fields(),
             [
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "e05c25d2c17ec20d6bc8fd21204af52808451076cff687407164a21d352ddd22"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "86adb66729f1a01031c0651afe4d83dfa34ac86cdc900bdd5f88a70bbb6dbe1f"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "0000000000000000000000000000000000000000000000000000000000000000"
                 )
                 .expect("failed to create field"),
@@ -748,7 +726,7 @@ mod tests {
         roi.append_bit(true);
         roi.append_bit(false);
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "0de1cf4144188f0c6fdc1aea7e752727928344f67dac801a25063b23de349668",
             )
             .expect("failed to create scalar"),
@@ -767,11 +745,11 @@ mod tests {
         assert_eq!(
             roi.to_fields(),
             [
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "a159d2788fec18946800b2f6d9130d4a9e9cd4f9a96b70bf313c6210053d8737"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "98e7650000000000000000000000000000000000000000000000000000000000"
                 )
                 .expect("failed to create field"),
@@ -785,13 +763,11 @@ mod tests {
         roi.append_bit(false);
         roi.append_bit(true);
         roi.append_field(
-            PallasField::from_hex(
-                "90926b620ad09ed616d5df158504faed42928719c58ae619d9eccc062f920411",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("90926b620ad09ed616d5df158504faed42928719c58ae619d9eccc062f920411")
+                .expect("failed to create field"),
         );
         roi.append_scalar(
-            PallasScalar::from_hex(
+            ScalarField::from_hex(
                 "0de1cf4144188f0c6fdc1aea7e752727928344f67dac801a25063b23de349668",
             )
             .expect("failed to create scalar"),
@@ -811,15 +787,15 @@ mod tests {
         assert_eq!(
             roi.to_fields(),
             [
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "90926b620ad09ed616d5df158504faed42928719c58ae619d9eccc062f920411"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "a259d2788fec18946800b2f6d9130d4a9e9cd4f9a96b70bf313c6210053d8737"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "0000000000000000000000000000000000000000000000000000000000000000"
                 )
                 .expect("failed to create field"),
@@ -831,22 +807,16 @@ mod tests {
     fn transaction_test_1() {
         let mut roi = ROInput::new();
         roi.append_field(
-            PallasField::from_hex(
-                "41203c6bbac14b357301e1f386d80f52123fd00f02197491b690bddfa742ca22",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("41203c6bbac14b357301e1f386d80f52123fd00f02197491b690bddfa742ca22")
+                .expect("failed to create field"),
         ); // fee payer
         roi.append_field(
-            PallasField::from_hex(
-                "992cdaf29ffe15b2bcea5d00e498ed4fffd117c197f0f98586e405f72ef88e00",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("992cdaf29ffe15b2bcea5d00e498ed4fffd117c197f0f98586e405f72ef88e00")
+                .expect("failed to create field"),
         ); // source
         roi.append_field(
-            PallasField::from_hex(
-                "3fba4fa71bce0dfdf709d827463036d6291458dfef772ff65e87bd6d1b1e062a",
-            )
-            .expect("failed to create field"),
+            BaseField::from_hex("3fba4fa71bce0dfdf709d827463036d6291458dfef772ff65e87bd6d1b1e062a")
+                .expect("failed to create field"),
         ); // receiver
         roi.append_u64(1000000); // fee
         roi.append_u64(1); // fee token
@@ -885,27 +855,27 @@ mod tests {
         assert_eq!(
             roi.to_fields(),
             [
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "41203c6bbac14b357301e1f386d80f52123fd00f02197491b690bddfa742ca22"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "992cdaf29ffe15b2bcea5d00e498ed4fffd117c197f0f98586e405f72ef88e00"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "3fba4fa71bce0dfdf709d827463036d6291458dfef772ff65e87bd6d1b1e062a"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "40420f0000000000010000000000000001000000feffffff0100000000000000"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "0000000000000000000000000000000000000000000000000000400100000000"
                 )
                 .expect("failed to create field"),
-                PallasField::from_hex(
+                BaseField::from_hex(
                     "00000000902f5009000000000000000000000000000000000000000000000000"
                 )
                 .expect("failed to create field"),

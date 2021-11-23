@@ -7,25 +7,25 @@ use bs58;
 use sha2::{Digest, Sha256};
 use std::ops::Neg;
 
-use crate::{FieldHelpers, PallasField, PallasPoint};
+use crate::{BaseField, CurvePoint, FieldHelpers};
 
 /// Length of Mina addresses
 const MINA_ADDRESS_LEN: usize = 55;
 
 /// Public key
-pub type PubKey = PallasPoint;
+pub type PubKey = CurvePoint;
 
 /// Compressed public keys consist of x-coordinate and y-coordinate parity.
 #[derive(Clone, Copy)]
 pub struct CompressedPubKey {
     /// X-coordinate
-    pub x: PallasField,
+    pub x: BaseField,
 
     /// Parity of y-coordinate
     pub is_odd: bool,
 }
 
-fn to_address(x: PallasField, is_odd: bool) -> String {
+fn to_address(x: BaseField, is_odd: bool) -> String {
     let mut raw: Vec<u8> = vec![
         0xcb, // version for base58 check
         0x01, // non_zero_curve_point version
@@ -100,9 +100,9 @@ impl PubKeyHelpers for PubKey {
             return Err("Invalid address version info");
         }
 
-        let x = PallasField::from_bytes(x_bytes);
+        let x = BaseField::from_bytes(x_bytes);
         let mut pt =
-            PallasPoint::get_point_from_x(x, y_parity).ok_or("Invalid address x-coordinate")?;
+            CurvePoint::get_point_from_x(x, y_parity).ok_or("Invalid address x-coordinate")?;
 
         if pt.y.into_repr().is_even() == y_parity {
             pt.y = pt.y.neg();

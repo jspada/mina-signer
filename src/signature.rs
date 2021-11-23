@@ -2,21 +2,21 @@
 
 use std::fmt;
 
-use crate::{FieldHelpers, PallasField, PallasScalar, ScalarHelpers};
+use crate::{BaseField, FieldHelpers, ScalarField, ScalarHelpers};
 
 /// Signature structure
 #[derive(Clone, Copy, Eq, fmt::Debug, PartialEq)]
 pub struct Signature {
     /// Field component
-    pub rx: PallasField,
+    pub rx: BaseField,
 
     /// Scalar component
-    pub s: PallasScalar,
+    pub s: ScalarField,
 }
 
 impl Signature {
     /// Create a new signature
-    pub fn new(rx: PallasField, s: PallasScalar) -> Self {
+    pub fn new(rx: BaseField, s: ScalarField) -> Self {
         Self { rx, s }
     }
 }

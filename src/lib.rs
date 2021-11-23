@@ -45,7 +45,7 @@ pub mod roinput;
 pub mod schnorr;
 pub mod signature;
 
-pub use domain::{FieldHelpers, PallasField, PallasPoint, PallasScalar, ScalarHelpers};
+pub use domain::{BaseField, CurvePoint, FieldHelpers, ScalarField, ScalarHelpers};
 pub use keypair::Keypair;
 pub use pubkey::{CompressedPubKey, PubKey, PubKeyHelpers};
 pub use roinput::{Input, ROInput};
@@ -89,15 +89,15 @@ pub trait Signer {
 /// Create a default signer context for network instance identified by `network_id`
 pub fn create(network_id: NetworkId) -> impl Signer {
     Schnorr::<PlonkSpongeConstantsBasic>::new(
-        ArithmeticSponge::<PallasField, PlonkSpongeConstantsBasic>::new(pasta::fp::params()),
+        ArithmeticSponge::<BaseField, PlonkSpongeConstantsBasic>::new(pasta::fp::params()),
         network_id,
     )
 }
 
 /// Create a custom signer context for network instance identified by `network_id` using custom sponge parameters `params`
 pub fn custom<SC: SpongeConstants>(
-    params: ArithmeticSpongeParams<PallasField>,
+    params: ArithmeticSpongeParams<BaseField>,
     network_id: NetworkId,
 ) -> impl Signer {
-    Schnorr::<SC>::new(ArithmeticSponge::<PallasField, SC>::new(params), network_id)
+    Schnorr::<SC>::new(ArithmeticSponge::<BaseField, SC>::new(params), network_id)
 }

@@ -1,7 +1,7 @@
 pub mod transaction;
 
 use ark_ff::Zero;
-use signer::{Keypair, NetworkId, PallasField, PallasScalar, PubKey, PubKeyHelpers, Signer};
+use signer::{BaseField, Keypair, NetworkId, PubKey, PubKeyHelpers, ScalarField, Signer};
 pub use transaction::Transaction;
 
 macro_rules! assert_sign_payment_tx {
@@ -139,12 +139,12 @@ fn signer_zero_test() {
 
     // Zero some things
     let mut sig2 = sig;
-    sig2.rx = PallasField::zero();
+    sig2.rx = BaseField::zero();
     assert_eq!(ctx.verify(sig2, kp.public, tx), false);
     let mut sig3 = sig;
-    sig3.s = PallasScalar::zero();
+    sig3.s = ScalarField::zero();
     assert_eq!(ctx.verify(sig3, kp.public, tx), false);
-    sig3.rx = PallasField::zero();
+    sig3.rx = BaseField::zero();
     assert_eq!(ctx.verify(sig3, kp.public, tx), false);
 }
 
