@@ -34,7 +34,7 @@
 //!
 //! let mut ctx = signer::create(NetworkId::TESTNET);
 //! let sig = ctx.sign(kp, thang);
-//! assert_eq!(ctx.verify(sig, kp.pub_key, thang), true);
+//! assert_eq!(ctx.verify(sig, kp.public, thang), true);
 //! ```
 #![warn(missing_docs)]
 

@@ -42,7 +42,7 @@ fn to_address(x: PallasField, is_odd: bool) -> String {
     let hash = Sha256::digest(&Sha256::digest(&raw[..])[..]);
     raw.extend(&hash[..4]);
 
-    return bs58::encode(raw).into_string();
+    bs58::encode(raw).into_string()
 }
 
 impl CompressedPubKey {

@@ -125,7 +125,7 @@ use signer::Keypair;
 
 #[test]
 fn transaction_domain() {
-    let tx = Transaction::new_payment(Keypair::rand().pub_key, Keypair::rand().pub_key, 0, 0, 0);
+    let tx = Transaction::new_payment(Keypair::rand().public, Keypair::rand().public, 0, 0, 0);
     assert_eq!(tx.domain_string(NetworkId::MAINNET), "MinaSignatureMainnet");
     assert_eq!(tx.domain_string(NetworkId::TESTNET), "CodaSignature");
 }
@@ -135,7 +135,7 @@ fn transaction_memo() {
     let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
         .expect("failed to create keypair");
 
-    let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
+    let tx = Transaction::new_payment(kp.public, kp.public, 0, 0, 0);
     assert_eq!(
         tx.memo,
         [
@@ -176,7 +176,7 @@ fn transaction_memo_str() {
     let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
         .expect("failed to create keypair");
 
-    let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 0, 0, 0);
+    let tx = Transaction::new_payment(kp.public, kp.public, 0, 0, 0);
     assert_eq!(
         tx.memo,
         [

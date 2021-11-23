@@ -14,35 +14,35 @@ pub type SecKey = PallasScalar;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Keypair {
     /// Secret key
-    pub sec_key: SecKey,
+    pub secret: SecKey,
     /// Public key
-    pub pub_key: PubKey,
+    pub public: PubKey,
 }
 
 impl Keypair {
     /// Generate a random keypair
     pub fn rand() -> Self {
-        let sec_key: PallasScalar = PallasScalar::rand(&mut rand::rngs::OsRng);
-        let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator()
-            .mul(sec_key)
+        let secret: PallasScalar = PallasScalar::rand(&mut rand::rngs::OsRng);
+        let public: PallasPoint = PallasPoint::prime_subgroup_generator()
+            .mul(secret)
             .into_affine();
 
-        Keypair { sec_key, pub_key }
+        Keypair { secret, public }
     }
 
     /// Deserialize a keypair from secret key hex
-    pub fn from_hex(sec_key_hex: &str) -> Result<Self, &'static str> {
-        let sec_key = PallasScalar::from_hex(sec_key_hex).map_err(|_| "Invalid secret key hex")?;
-        let pub_key: PallasPoint = PallasPoint::prime_subgroup_generator()
-            .mul(sec_key)
+    pub fn from_hex(secret_hex: &str) -> Result<Self, &'static str> {
+        let secret = PallasScalar::from_hex(secret_hex).map_err(|_| "Invalid secret key hex")?;
+        let public: PallasPoint = PallasPoint::prime_subgroup_generator()
+            .mul(secret)
             .into_affine();
 
-        Ok(Keypair { sec_key, pub_key })
+        Ok(Keypair { secret, public })
     }
 
     /// Obtain the Mina address corresponding to the keypair's public key
     pub fn get_address(self) -> String {
-        self.pub_key.to_address()
+        self.public.to_address()
     }
 }
 

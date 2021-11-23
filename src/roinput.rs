@@ -114,7 +114,7 @@ impl ROInput {
     }
 
     /// Serialize random oracle input to bytes
-    pub fn to_bytes(&mut self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Vec<u8> {
         let mut bits: BitVec<Lsb0, u8> = self.fields.iter().fold(BitVec::new(), |mut acc, fe| {
             acc.extend_from_bitslice(
                 &fe.to_bytes().as_bits::<Lsb0>()[..PallasField::size_in_bits()],
@@ -123,13 +123,13 @@ impl ROInput {
             acc
         });
 
-        bits.extend(self.bits.iter());
+        bits.extend(&self.bits);
 
-        return bits.as_raw_slice().to_vec();
+        bits.into()
     }
 
     /// Serialize random oracle input to vector of base field elements
-    pub fn to_fields(&mut self) -> Vec<PallasField> {
+    pub fn to_fields(&self) -> Vec<PallasField> {
         let mut fields: Vec<PallasField> = self.fields.clone();
 
         let bits_as_fields = self

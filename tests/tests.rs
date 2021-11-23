@@ -9,7 +9,7 @@ macro_rules! assert_sign_payment_tx {
      $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
         let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
         assert_eq!(
-            kp.pub_key,
+            kp.public,
             PubKey::from_address($source_address).expect("invalid source address")
         );
         let mut tx = Transaction::new_payment(
@@ -34,15 +34,15 @@ macro_rules! assert_sign_payment_tx {
         assert_eq!(mainnet_sig.to_string(), $mainnet_target); // Mainnet target check
 
         // Verification checks
-        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), true);
-        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), true);
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.public, tx), true);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.public, tx), true);
 
-        assert_eq!(mainnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
-        assert_eq!(testnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
+        assert_eq!(mainnet_ctx.verify(testnet_sig, kp.public, tx), false);
+        assert_eq!(testnet_ctx.verify(mainnet_sig, kp.public, tx), false);
 
         tx.valid_until = !tx.valid_until;
-        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
-        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.public, tx), false);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.public, tx), false);
     };
 }
 
@@ -51,7 +51,7 @@ macro_rules! assert_sign_delegation_tx {
      $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
         let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
         assert_eq!(
-            kp.pub_key,
+            kp.public,
             PubKey::from_address($source_address).expect("invalid source address")
         );
         let mut tx = Transaction::new_delegation(
@@ -75,15 +75,15 @@ macro_rules! assert_sign_delegation_tx {
         assert_eq!(mainnet_sig.to_string(), $mainnet_target); // Mainnet target check
 
         // Verification checks
-        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), true);
-        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), true);
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.public, tx), true);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.public, tx), true);
 
-        assert_eq!(mainnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
-        assert_eq!(testnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
+        assert_eq!(mainnet_ctx.verify(testnet_sig, kp.public, tx), false);
+        assert_eq!(testnet_ctx.verify(mainnet_sig, kp.public, tx), false);
 
         tx.valid_until = !tx.valid_until;
-        assert_eq!(testnet_ctx.verify(testnet_sig, kp.pub_key, tx), false);
-        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.pub_key, tx), false);
+        assert_eq!(testnet_ctx.verify(testnet_sig, kp.public, tx), false);
+        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.public, tx), false);
     };
 }
 
@@ -92,7 +92,7 @@ fn signer_test_raw() {
     let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
         .expect("failed to create keypair");
     let tx = Transaction::new_payment(
-        kp.pub_key,
+        kp.public,
         PubKey::from_address("B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt")
             .expect("invalid address"),
         1729000000000,
@@ -124,7 +124,7 @@ fn signer_zero_test() {
     let kp = Keypair::from_hex("164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718")
         .expect("failed to create keypair");
     let tx = Transaction::new_payment(
-        kp.pub_key,
+        kp.public,
         PubKey::from_address("B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt")
             .expect("invalid address"),
         1729000000000,
@@ -135,17 +135,17 @@ fn signer_zero_test() {
     let mut ctx = signer::create(NetworkId::TESTNET);
     let sig = ctx.sign(kp, tx);
 
-    assert_eq!(ctx.verify(sig, kp.pub_key, tx), true);
+    assert_eq!(ctx.verify(sig, kp.public, tx), true);
 
     // Zero some things
     let mut sig2 = sig;
     sig2.rx = PallasField::zero();
-    assert_eq!(ctx.verify(sig2, kp.pub_key, tx), false);
+    assert_eq!(ctx.verify(sig2, kp.public, tx), false);
     let mut sig3 = sig;
     sig3.s = PallasScalar::zero();
-    assert_eq!(ctx.verify(sig3, kp.pub_key, tx), false);
+    assert_eq!(ctx.verify(sig3, kp.public, tx), false);
     sig3.rx = PallasField::zero();
-    assert_eq!(ctx.verify(sig3, kp.pub_key, tx), false);
+    assert_eq!(ctx.verify(sig3, kp.public, tx), false);
 }
 
 #[test]
@@ -281,6 +281,6 @@ fn custom_signer_test() {
         pasta::fp_3::params(),
         NetworkId::MAINNET,
     );
-    let tx = Transaction::new_payment(kp.pub_key, kp.pub_key, 2049, 1, 0);
+    let tx = Transaction::new_payment(kp.public, kp.public, 2049, 1, 0);
     ctx.sign(kp, tx);
 }

@@ -43,19 +43,19 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
         let r: PallasPoint = PallasPoint::prime_subgroup_generator().mul(k).into_affine();
         let k: PallasScalar = if r.y.into_repr().is_even() { k } else { -k };
 
-        let e: PallasScalar = self.message_hash(&kp.pub_key, r.x, input);
-        let s: PallasScalar = k + e * kp.sec_key;
+        let e: PallasScalar = self.message_hash(&kp.public, r.x, input);
+        let s: PallasScalar = k + e * kp.secret;
 
         Signature::new(r.x, s)
     }
 
-    fn verify<I: Input>(&mut self, sig: Signature, pub_key: PubKey, input: I) -> bool {
-        let ev: PallasScalar = self.message_hash(&pub_key, sig.rx, input);
+    fn verify<I: Input>(&mut self, sig: Signature, public: PubKey, input: I) -> bool {
+        let ev: PallasScalar = self.message_hash(&public, sig.rx, input);
 
         let sv: PallasPoint = PallasPoint::prime_subgroup_generator()
             .mul(sig.s)
             .into_affine();
-        let rv: PallasPoint = sv + pub_key.mul(ev).neg().into_affine();
+        let rv: PallasPoint = sv + public.mul(ev).neg().into_affine();
 
         !rv.infinity && rv.y.into_repr().is_even() && rv.x == sig.rx
     }
@@ -87,9 +87,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         let mut hasher = VarBlake2b::new(32).unwrap();
 
         let mut roi: ROInput = input.to_roinput();
-        roi.append_field(kp.pub_key.x);
-        roi.append_field(kp.pub_key.y);
-        roi.append_scalar(kp.sec_key);
+        roi.append_field(kp.public.x);
+        roi.append_field(kp.public.y);
+        roi.append_scalar(kp.secret);
         roi.append_bytes(&[self.network_id.into()]);
 
         hasher.update(roi.to_bytes());
