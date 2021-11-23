@@ -66,6 +66,7 @@ pub trait Input: Copy {
 /// as a vector of *field elements*.  The random oracle input encapsulates and automates this
 /// complexity.
 
+#[derive(Default)]
 pub struct ROInput {
     fields: Vec<PallasField>,
     bits: BitVec<Lsb0, u8>,
@@ -165,12 +166,6 @@ impl ROInput {
         fields.extend(bits_as_fields);
 
         fields
-    }
-}
-
-impl Default for ROInput {
-    fn default() -> Self {
-        ROInput::new()
     }
 }
 

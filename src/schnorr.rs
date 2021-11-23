@@ -73,6 +73,7 @@ impl<SC: SpongeConstants> Schnorr<SC> {
     {
         let mut domain_string = input.domain_string(self.network_id);
         // Domain prefixes have a max length of 20 and are padded with '*'
+        assert!(domain_string.len() <= 20);
         domain_string = &domain_string[..std::cmp::min(domain_string.len(), 20)];
         let mut bytes = format!("{:*<20}", domain_string).as_bytes().to_vec();
         bytes.resize(32, 0);

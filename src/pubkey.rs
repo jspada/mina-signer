@@ -73,7 +73,7 @@ impl PubKeyHelpers for PubKey {
     }
 
     fn to_address(self) -> String {
-        to_address(self.x, !self.y.into_repr().is_even())
+        to_address(self.x, self.y.into_repr().is_odd())
     }
 
     fn from_address(address: &str) -> Result<Self, &'static str> {
