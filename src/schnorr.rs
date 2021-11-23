@@ -81,7 +81,10 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         bytes
     }
 
-    fn blinding_hash<I>(&mut self, kp: &Keypair, input: I) -> ScalarField
+    // This function uses a cryptographic hash function to create a uniformly and
+    // randomly distributed nonce.  It is crucial for security that no two different
+    // messages share the same nonce.
+    fn blinding_hash<I>(&self, kp: &Keypair, input: I) -> ScalarField
     where
         I: Input,
     {
@@ -97,11 +100,20 @@ impl<SC: SpongeConstants> Schnorr<SC> {
 
         let mut bytes = [0; 32];
         hasher.finalize_variable(|out| bytes.copy_from_slice(out));
-        bytes[bytes.len() - 1] &= 0b0011_1111; // drop top two bits
+        // Drop the top two bits to convert into a scalar field element
+        //   N.B. Since the order p is very close to 2^m for some m, truncating only creates
+        //   a tiny amount of bias that should be insignificant and keeps the implementation
+        //   simple by avoiding reduction modulo p.
+        bytes[bytes.len() - 1] &= 0b0011_1111;
 
         ScalarField::from_random_bytes(&bytes[..]).expect("failed to create scalar from bytes")
     }
 
+    // This function uses a cryptographic hash function (based on a sponge construction) to
+    // convert the message to be signed (and some other information) into a uniformly and
+    // randomly distributed scalar field element.  It uses Mina's variant of the Poseidon
+    // SNARK-friendly cryptographic hash function.
+    // Details: <https://github.com/o1-labs/cryptography-rfcs/blob/httpsnapps-notary-signatures/mina/001-poseidon-sponge.md>
     fn message_hash<I>(&mut self, pub_key: &PubKey, rx: BaseField, input: I) -> ScalarField
     where
         I: Input,
