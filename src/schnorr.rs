@@ -130,8 +130,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
 
         // Set sponge initial state (explicitly init state so signer context can be reused)
         self.sponge.state = vec![BaseField::zero(); self.sponge.state.len()];
-        self.sponge
-            .absorb(&[BaseField::from_bytes(&self.domain_bytes(input))]);
+        self.sponge.absorb(&[
+            BaseField::from_bytes(&self.domain_bytes(input)).expect("invalid domain bytes")
+        ]);
         self.sponge.squeeze();
 
         // Absorb random oracle input

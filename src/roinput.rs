@@ -156,7 +156,10 @@ impl ROInput {
                 // extend to the size of a field;
                 bv.resize(BaseField::size_in_bits(), false);
 
-                acc.push(BaseField::from_bytes(&bv.into_vec()));
+                acc.push(
+                    BaseField::from_bytes(&bv.into_vec())
+                        .expect("failed to create base field element"),
+                );
 
                 acc
             });
@@ -227,7 +230,7 @@ mod tests {
     #[test]
     fn append_scalar() {
         let scalar = ScalarField::from_hex(
-            "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
+            "18b7ef420128e69623c0c0dcfa28d47a029d462720deb769d7b5dd6f17444216",
         )
         .expect("failed to create scalar");
         let mut roi: ROInput = ROInput::new();
@@ -254,7 +257,7 @@ mod tests {
     #[test]
     fn append_scalar_and_byte() {
         let scalar = ScalarField::from_hex(
-            "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
+            "18b7ef420128e69623c0c0dcfa28d47a029d462720deb769d7b5dd6f17444216",
         )
         .expect("failed to create scalar");
         let mut roi: ROInput = ROInput::new();
@@ -274,11 +277,11 @@ mod tests {
     #[test]
     fn append_two_scalars() {
         let scalar1 = ScalarField::from_hex(
-            "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
+            "18b7ef420128e69623c0c0dcfa28d47a029d462720deb769d7b5dd6f17444216",
         )
         .expect("failed to create scalar");
         let scalar2 = ScalarField::from_hex(
-            "05e84aeb13bfe967e9c5e842b795cbdbabff0e4e1348752741e35b8348e9b1a1",
+            "a1b1e948835be341277548134e0effabdbcb95b742e8c5e967e9bf13eb4ae805",
         )
         .expect("failed to create scalar");
         let mut roi: ROInput = ROInput::new();
@@ -300,11 +303,11 @@ mod tests {
     #[test]
     fn append_two_scalars_and_byte() {
         let scalar1 = ScalarField::from_hex(
-            "1fbdb2a799ae51d482cd433f6e7a8c26c34c329eba7f74cbc7e18c5b4f6fdb60",
+            "60db6f4f5b8ce1c7cb747fba9e324cc3268c7a6e3f43cd82d451ae99a7b2bd1f",
         )
         .expect("failed to create scalar");
         let scalar2 = ScalarField::from_hex(
-            "07cd3821f100189d9ceffe2acfd88e4b409fb94e5a3ee2f358ebbc06b17577fe",
+            "fe7775b106bceb58f3e23e5a4eb99f404b8ed8cf2afeef9c9d1800f12138cd07",
         )
         .expect("failed to create scalar");
         let mut roi: ROInput = ROInput::new();
@@ -373,7 +376,7 @@ mod tests {
         roi.append_bit(true);
         roi.append_scalar(
             ScalarField::from_hex(
-                "02a1d7e72199794b83c8b4d44c480fd7a38d1736345acfa9d28c1cb25d75d101",
+                "01d1755db21c8cd2a9cf5a3436178da3d70f484cd4b4c8834b799921e7d7a102",
             )
             .expect("failed to create scalar"),
         );
@@ -381,7 +384,7 @@ mod tests {
         roi.append_bytes(&vec![0xba, 0xdc, 0x0f, 0xfe]);
         roi.append_scalar(
             ScalarField::from_hex(
-                "1018176fd80cfa457b14deebea52a67f28d86fa73d43d089445225b1e98701e7",
+                "e70187e9b125524489d0433da76fd8287fa652eaebde147b45fa0cd86f171810",
             )
             .expect("failed to create scalar"),
         );
@@ -423,7 +426,7 @@ mod tests {
         roi.append_bit(false); // token_locked
         roi.append_scalar(
             ScalarField::from_hex(
-                "2d6d5f0550d4a730ddba8d2d53be94380e89093cf6758e277a0bca17307a21de",
+                "de217a3017ca0b7a278e75f63c09890e3894be532d8dbadd30a7d450055f6d2d",
             )
             .expect("failed to create scalar"),
         );
@@ -525,7 +528,7 @@ mod tests {
         );
         roi.append_scalar(
             ScalarField::from_hex(
-                "32648cf979e395ef5bc9274ca67bd6049bbdc511eed73f78db55a4dad0554360",
+                "604355d0daa455db783fd7ee11c5bd9b04d67ba64c27c95bef95e379f98c6432",
             )
             .expect("failed to create scalar"),
         );
@@ -552,7 +555,7 @@ mod tests {
         roi.append_bit(false);
         roi.append_scalar(
             ScalarField::from_hex(
-                "282bd473ffc218d8e46c83060fa56c058f5076cae0abb291893cb5b8c66c5879",
+                "79586cc6b8b53c8991b2abe0ca76508f056ca50f06836ce4d818c2ff73d42b28",
             )
             .expect("failed to create scalar"),
         );
@@ -584,7 +587,7 @@ mod tests {
         roi.append_u32(314u32);
         roi.append_scalar(
             ScalarField::from_hex(
-                "238344cc01fd5d8cfc7c69cc4a7497bcdb3cb9810d0f8b571615dc3da2433cc2",
+                "c23c43a23ddc1516578b0f0d81b93cdbbc97744acc697cfc8c5dfd01cc448323",
             )
             .expect("failed to create scalar"),
         );
@@ -609,7 +612,7 @@ mod tests {
         let mut roi = ROInput::new();
         roi.append_scalar(
             ScalarField::from_hex(
-                "25a6f0854fb5a0e31efa844f50788cbc162b0998708806c040f663ffd86d495d",
+                "5d496dd8ff63f640c006887098092b16bc8c78504f84fa1ee3a0b54f85f0a625",
             )
             .expect("failed to create scalar"),
         );
@@ -643,7 +646,7 @@ mod tests {
         let mut roi = ROInput::new();
         roi.append_scalar(
             ScalarField::from_hex(
-                "3073e402aa9e8a5e710f0723d1daa690efe6b0f666733d0e0d7b418c1c96a9e8",
+                "e8a9961c8c417b0d0e3d7366f6b0e6ef90a6dad123070f715e8a9eaa02e47330",
             )
             .expect("failed to create scalar"),
         );
@@ -679,13 +682,13 @@ mod tests {
         let mut roi = ROInput::new();
         roi.append_scalar(
             ScalarField::from_hex(
-                "22dd2d351da264714087f6cf7610450828f54a2021fdc86b0dc27ec1d2255ce0",
+                "e05c25d2c17ec20d6bc8fd21204af52808451076cff687407164a21d352ddd22",
             )
             .expect("failed to create scalar"),
         );
         roi.append_scalar(
             ScalarField::from_hex(
-                "0fdf36dd85d3c42fee85c86e36642551efc1a6ff0d32e01888507894b3db56c3",
+                "c356dbb39478508818e0320dffa6c1ef512564366ec885ee2fc4d385dd36df0f",
             )
             .expect("failed to create scalar"),
         );
@@ -727,7 +730,7 @@ mod tests {
         roi.append_bit(false);
         roi.append_scalar(
             ScalarField::from_hex(
-                "0de1cf4144188f0c6fdc1aea7e752727928344f67dac801a25063b23de349668",
+                "689634de233b06251a80ac7df64483922727757eea1adc6f0c8f184441cfe10d",
             )
             .expect("failed to create scalar"),
         );
@@ -768,7 +771,7 @@ mod tests {
         );
         roi.append_scalar(
             ScalarField::from_hex(
-                "0de1cf4144188f0c6fdc1aea7e752727928344f67dac801a25063b23de349668",
+                "689634de233b06251a80ac7df64483922727757eea1adc6f0c8f184441cfe10d",
             )
             .expect("failed to create scalar"),
         );

@@ -32,7 +32,10 @@ impl Keypair {
 
     /// Deserialize a keypair from secret key hex
     pub fn from_hex(secret_hex: &str) -> Result<Self, &'static str> {
-        let secret = ScalarField::from_hex(secret_hex).map_err(|_| "Invalid secret key hex")?;
+        let mut bytes: Vec<u8> = hex::decode(secret_hex).map_err(|_| "Invalid secret key hex")?;
+        bytes.reverse(); // mina scalars hex format is in big-endian order
+
+        let secret = ScalarField::from_bytes(&bytes).map_err(|_| "Invalid secret key hex")?;
         let public: CurvePoint = CurvePoint::prime_subgroup_generator()
             .mul(secret)
             .into_affine();

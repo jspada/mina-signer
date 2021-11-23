@@ -100,7 +100,7 @@ impl PubKeyHelpers for PubKey {
             return Err("Invalid address version info");
         }
 
-        let x = BaseField::from_bytes(x_bytes);
+        let x = BaseField::from_bytes(x_bytes).map_err(|_| "invalid x-coordinate bytes")?;
         let mut pt =
             CurvePoint::get_point_from_x(x, y_parity).ok_or("Invalid address x-coordinate")?;
 

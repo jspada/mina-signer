@@ -23,6 +23,11 @@ impl Signature {
 
 impl fmt::Display for Signature {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", self.rx.to_hex(), self.s.to_hex())
+        let mut rx_bytes = self.rx.to_bytes();
+        let mut s_bytes = self.s.to_bytes();
+        rx_bytes.reverse();
+        s_bytes.reverse();
+
+        write!(f, "{}{}", hex::encode(rx_bytes), hex::encode(s_bytes))
     }
 }

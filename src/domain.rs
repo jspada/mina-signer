@@ -19,7 +19,7 @@ use ark_serialize::{CanonicalDeserialize as _, CanonicalSerialize as _};
 /// Base field element helpers
 pub trait FieldHelpers {
     /// Deserialize from bytes
-    fn from_bytes(bytes: &[u8]) -> BaseField;
+    fn from_bytes(bytes: &[u8]) -> Result<BaseField, &str>;
 
     /// Deserialize from hex
     fn from_hex(hex: &str) -> Result<BaseField, &str>;
@@ -32,8 +32,8 @@ pub trait FieldHelpers {
 }
 
 impl FieldHelpers for BaseField {
-    fn from_bytes(bytes: &[u8]) -> BaseField {
-        BaseField::deserialize(&mut &*bytes).expect("failed to deserialize field")
+    fn from_bytes(bytes: &[u8]) -> Result<BaseField, &str> {
+        BaseField::deserialize(&mut &*bytes).map_err(|_| "failed to deserialize field bytes")
     }
 
     fn from_hex(hex: &str) -> Result<BaseField, &str> {
@@ -52,10 +52,7 @@ impl FieldHelpers for BaseField {
     }
 
     fn to_hex(self) -> String {
-        let mut bytes = self.to_bytes();
-        bytes.reverse(); // mina order
-
-        hex::encode(bytes)
+        hex::encode(self.to_bytes())
     }
 }
 
@@ -63,7 +60,7 @@ impl FieldHelpers for BaseField {
 // TODO: Combine into single Helpers trait (why did rust require two?!)
 pub trait ScalarHelpers {
     /// Deserialize from bytes
-    fn from_bytes(bytes: &[u8]) -> ScalarField;
+    fn from_bytes(bytes: &[u8]) -> Result<ScalarField, &str>;
 
     /// Deserialize from hex
     fn from_hex(hex: &str) -> Result<ScalarField, &str>;
@@ -76,13 +73,12 @@ pub trait ScalarHelpers {
 }
 
 impl ScalarHelpers for ScalarField {
-    fn from_bytes(bytes: &[u8]) -> ScalarField {
-        ScalarField::deserialize(&mut &*bytes).expect("failed to deserialize scalar")
+    fn from_bytes(bytes: &[u8]) -> Result<ScalarField, &str> {
+        ScalarField::deserialize(&mut &*bytes).map_err(|_| "failed to deserialize scalar")
     }
 
     fn from_hex(hex: &str) -> Result<ScalarField, &str> {
-        let mut bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode scalar hex")?;
-        bytes.reverse(); // mina scalars hex format is in big-endian order
+        let bytes: Vec<u8> = hex::decode(hex).map_err(|_| "Failed to decode scalar hex")?;
 
         ScalarField::deserialize(&mut &bytes[..]).map_err(|_| "Failed to deserialize scalar bytes")
     }
@@ -97,10 +93,7 @@ impl ScalarHelpers for ScalarField {
     }
 
     fn to_hex(self) -> String {
-        let mut bytes = self.to_bytes();
-        bytes.reverse(); // mina order
-
-        hex::encode(bytes)
+        hex::encode(self.to_bytes())
     }
 }
 
@@ -166,14 +159,14 @@ mod tests {
         );
         assert_eq!(
             ScalarField::from_hex(
-                "dd4244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718"
+                "817bfe2410826e69320c0ccdaf824da720d9647202ed7b967d5bddf6714424dd"
             ),
             Err("Failed to deserialize scalar bytes")
         );
 
         assert_eq!(
             ScalarField::from_hex(
-                "238344cc01fd5d8cfc7c69cc4a7497bcdb3cb9810d0f8b571615dc3da2433cc2"
+                "2cc3342ad3cd516175b8f0d0189bc3bdcb7947a4cc96c7cfc8d5df10cc443832"
             )
             .is_ok(),
             true
