@@ -47,7 +47,7 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
         let k: ScalarField = if r.y.into_repr().is_even() { k } else { -k };
 
         let e: ScalarField = self.message_hash(&kp.public, r.x, input);
-        let s: ScalarField = k + e * kp.secret;
+        let s: ScalarField = k + e * kp.secret.to_scalar();
 
         Signature::new(r.x, s)
     }
@@ -62,7 +62,7 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
             .mul(sig.s)
             .into_affine();
         // Perform addition and infinity check in projective coordinates for performance
-        let rv = public.mul(ev).neg().add_mixed(&sv);
+        let rv = public.to_point().mul(ev).neg().add_mixed(&sv);
         if rv.is_zero() {
             return false;
         }
@@ -102,9 +102,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         let mut hasher = VarBlake2b::new(32).unwrap();
 
         let mut roi: ROInput = input.to_roinput();
-        roi.append_field(kp.public.x);
-        roi.append_field(kp.public.y);
-        roi.append_scalar(kp.secret);
+        roi.append_field(kp.public.to_point().x);
+        roi.append_field(kp.public.to_point().y);
+        roi.append_scalar(kp.secret.to_scalar());
         roi.append_bytes(&[self.network_id.into()]);
 
         hasher.update(roi.to_bytes());
@@ -130,8 +130,8 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         S: Signable,
     {
         let mut roi: ROInput = input.to_roinput();
-        roi.append_field(pub_key.x);
-        roi.append_field(pub_key.y);
+        roi.append_field(pub_key.to_point().x);
+        roi.append_field(pub_key.to_point().y);
         roi.append_field(rx);
 
         // Set sponge initial state (explicitly init state so signer context can be reused)

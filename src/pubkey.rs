@@ -4,16 +4,93 @@
 
 use ark_ff::{BigInteger, PrimeField};
 use bs58;
+use core::fmt;
 use sha2::{Digest, Sha256};
 use std::ops::Neg;
 
 use crate::{BaseField, CurvePoint, FieldHelpers};
 
 /// Length of Mina addresses
-const MINA_ADDRESS_LEN: usize = 55;
+pub const MINA_ADDRESS_LEN: usize = 55;
 
 /// Public key
-pub type PubKey = CurvePoint;
+#[derive(Copy, Clone, fmt::Debug, PartialEq, Eq)]
+pub struct PubKey(CurvePoint);
+
+impl PubKey {
+    /// Create a public key from curve point
+    pub fn new(point: CurvePoint) -> Self {
+        Self(point)
+    }
+
+    /// Deserialize Mina address into public key
+    pub fn from_address(address: &str) -> Result<Self, &'static str> {
+        if address.len() != MINA_ADDRESS_LEN {
+            return Err("Invalid address length");
+        }
+
+        let bytes = bs58::decode(address)
+            .into_vec()
+            .map_err(|_| "Invalid address encoding")?;
+
+        let (raw, checksum) = (&bytes[..bytes.len() - 4], &bytes[bytes.len() - 4..]);
+        let hash = Sha256::digest(&Sha256::digest(raw)[..]);
+        if checksum != &hash[..4] {
+            return Err("Invalid address checksum");
+        }
+
+        let (version, x_bytes, y_parity) = (
+            &raw[..3],
+            &raw[3..bytes.len() - 5],
+            raw[bytes.len() - 5] == 0x01,
+        );
+        if version != [0xcb, 0x01, 0x01] {
+            return Err("Invalid address version info");
+        }
+
+        let x = BaseField::from_bytes(x_bytes).map_err(|_| "invalid x-coordinate bytes")?;
+        let mut pt =
+            CurvePoint::get_point_from_x(x, y_parity).ok_or("Invalid address x-coordinate")?;
+
+        if pt.y.into_repr().is_even() == y_parity {
+            pt.y = pt.y.neg();
+        }
+
+        Ok(PubKey::new(pt))
+    }
+
+    /// Convert public key into curve point
+    pub fn to_point(self) -> CurvePoint {
+        self.0
+    }
+
+    /// Convert public key into compressed public key
+    pub fn to_compressed(self) -> CompressedPubKey {
+        let point = self.to_point();
+        CompressedPubKey {
+            x: point.x,
+            is_odd: !point.y.into_repr().is_even(),
+        }
+    }
+
+    /// Serialize public key into corresponding Mina address
+    pub fn to_address(self) -> String {
+        let point = self.to_point();
+        to_address(point.x, point.y.into_repr().is_odd())
+    }
+}
+
+impl fmt::Display for PubKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let point = self.to_point();
+        let mut x_bytes = point.x.to_bytes();
+        let mut y_bytes = point.y.to_bytes();
+        x_bytes.reverse();
+        y_bytes.reverse();
+
+        write!(f, "{}{}", hex::encode(x_bytes), hex::encode(y_bytes))
+    }
+}
 
 /// Compressed public keys consist of x-coordinate and y-coordinate parity.
 #[derive(Clone, Copy)]
@@ -49,66 +126,6 @@ impl CompressedPubKey {
     /// Serialize compressed public key into corresponding Mina address
     pub fn to_address(self) -> String {
         to_address(self.x, self.is_odd)
-    }
-}
-
-/// Public key helper interface
-pub trait PubKeyHelpers {
-    /// Convert public key into compressed public key
-    fn to_compressed(self) -> CompressedPubKey;
-
-    /// Serialize public key into corresponding Mina address
-    fn to_address(self) -> String;
-
-    /// Deserialize Mina address into public key
-    fn from_address(b58: &str) -> Result<PubKey, &'static str>;
-}
-
-impl PubKeyHelpers for PubKey {
-    fn to_compressed(self) -> CompressedPubKey {
-        CompressedPubKey {
-            x: self.x,
-            is_odd: !self.y.into_repr().is_even(),
-        }
-    }
-
-    fn to_address(self) -> String {
-        to_address(self.x, self.y.into_repr().is_odd())
-    }
-
-    fn from_address(address: &str) -> Result<Self, &'static str> {
-        if address.len() != MINA_ADDRESS_LEN {
-            return Err("Invalid address length");
-        }
-
-        let bytes = bs58::decode(address)
-            .into_vec()
-            .map_err(|_| "Invalid address encoding")?;
-
-        let (raw, checksum) = (&bytes[..bytes.len() - 4], &bytes[bytes.len() - 4..]);
-        let hash = Sha256::digest(&Sha256::digest(raw)[..]);
-        if checksum != &hash[..4] {
-            return Err("Invalid address checksum");
-        }
-
-        let (version, x_bytes, y_parity) = (
-            &raw[..3],
-            &raw[3..bytes.len() - 5],
-            raw[bytes.len() - 5] == 0x01,
-        );
-        if version != [0xcb, 0x01, 0x01] {
-            return Err("Invalid address version info");
-        }
-
-        let x = BaseField::from_bytes(x_bytes).map_err(|_| "invalid x-coordinate bytes")?;
-        let mut pt =
-            CurvePoint::get_point_from_x(x, y_parity).ok_or("Invalid address x-coordinate")?;
-
-        if pt.y.into_repr().is_even() == y_parity {
-            pt.y = pt.y.neg();
-        }
-
-        Ok(pt)
     }
 }
 

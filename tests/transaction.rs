@@ -1,6 +1,4 @@
-use mina_signer::{
-    CompressedPubKey, Hashable, NetworkId, PubKey, PubKeyHelpers, ROInput, Signable,
-};
+use mina_signer::{CompressedPubKey, Hashable, NetworkId, PubKey, ROInput, Signable};
 
 const MEMO_BYTES: usize = 34;
 const TAG_BITS: usize = 3;

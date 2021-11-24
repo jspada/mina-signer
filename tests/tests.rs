@@ -1,7 +1,7 @@
 pub mod transaction;
 
 use ark_ff::Zero;
-use mina_signer::{BaseField, Keypair, NetworkId, PubKey, PubKeyHelpers, ScalarField, Signer};
+use mina_signer::{BaseField, Keypair, NetworkId, PubKey, ScalarField, Signer};
 pub use transaction::Transaction;
 
 macro_rules! assert_sign_payment_tx {

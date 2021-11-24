@@ -2,16 +2,15 @@
 //!
 //! Definition of secret key, keypairs and related helpers
 
-use crate::{CurvePoint, FieldHelpers, PubKey, PubKeyHelpers, ScalarField};
+use core::fmt;
+
+use crate::{CurvePoint, FieldHelpers, PubKey, ScalarField, SecKey};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_ff::UniformRand;
 use rand;
 
-/// Secret key
-pub type SecKey = ScalarField;
-
 /// Keypair structure
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Keypair {
     /// Secret key
     pub secret: SecKey,
@@ -20,6 +19,14 @@ pub struct Keypair {
 }
 
 impl Keypair {
+    /// Create a keypair from scalar field `secret` element and curve point `public`
+    pub fn new(secret: ScalarField, public: CurvePoint) -> Self {
+        Self {
+            secret: SecKey::new(secret),
+            public: PubKey::new(public),
+        }
+    }
+
     /// Generate a random keypair
     pub fn rand() -> Self {
         let secret: ScalarField = ScalarField::rand(&mut rand::rngs::OsRng);
@@ -27,7 +34,10 @@ impl Keypair {
             .mul(secret)
             .into_affine();
 
-        Keypair { secret, public }
+        Keypair {
+            secret: SecKey::new(secret),
+            public: PubKey::new(public),
+        }
     }
 
     /// Deserialize a keypair from secret key hex
@@ -40,12 +50,26 @@ impl Keypair {
             .mul(secret)
             .into_affine();
 
-        Ok(Keypair { secret, public })
+        Ok(Keypair::new(secret, public))
     }
 
     /// Obtain the Mina address corresponding to the keypair's public key
     pub fn get_address(self) -> String {
         self.public.to_address()
+    }
+}
+
+impl fmt::Debug for Keypair {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Omit the secret key for security
+        write!(f, "{:?}", self.public)
+    }
+}
+
+impl fmt::Display for Keypair {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Omit the secret key for security
+        write!(f, "{}", self.public)
     }
 }
 

@@ -46,13 +46,15 @@ pub mod keypair;
 pub mod pubkey;
 pub mod roinput;
 pub mod schnorr;
+pub mod seckey;
 pub mod signature;
 
 pub use domain::{BaseField, CurvePoint, FieldHelpers, ScalarField};
 pub use keypair::Keypair;
-pub use pubkey::{CompressedPubKey, PubKey, PubKeyHelpers};
+pub use pubkey::{CompressedPubKey, PubKey};
 pub use roinput::ROInput;
 pub use schnorr::Schnorr;
+pub use seckey::SecKey;
 pub use signature::Signature;
 
 use oracle::{
