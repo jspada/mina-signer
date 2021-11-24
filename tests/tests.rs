@@ -5,64 +5,36 @@ use mina_signer::{BaseField, Keypair, NetworkId, PubKey, ScalarField, Signer};
 use rand;
 pub use transaction::Transaction;
 
-macro_rules! assert_sign_payment_tx {
-    ($sec_key:expr, $source_address:expr, $receiver_address:expr, $amount:expr, $fee:expr,
-     $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
-        let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
-        assert_eq!(
-            kp.public,
-            PubKey::from_address($source_address).expect("invalid source address")
-        );
-        let mut tx = Transaction::new_payment(
-            PubKey::from_address($source_address).expect("invalid source address"),
-            PubKey::from_address($receiver_address).expect("invalid receiver address"),
-            $amount,
-            $fee,
-            $nonce,
-        )
-        .set_valid_until($valid_until)
-        .set_memo_str($memo);
-
-        let mut testnet_ctx = mina_signer::create(NetworkId::TESTNET);
-        let testnet_sig = testnet_ctx.sign(kp, tx);
-
-        let mut mainnet_ctx = mina_signer::create(NetworkId::MAINNET);
-        let mainnet_sig = mainnet_ctx.sign(kp, tx);
-
-        // Signing checks
-        assert_ne!(testnet_sig, mainnet_sig); // Testnet and mainnet sigs are not equal
-        assert_eq!(testnet_sig.to_string(), $testnet_target); // Testnet target check
-        assert_eq!(mainnet_sig.to_string(), $mainnet_target); // Mainnet target check
-
-        // Verification checks
-        assert_eq!(testnet_ctx.verify(testnet_sig, kp.public, tx), true);
-        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.public, tx), true);
-
-        assert_eq!(mainnet_ctx.verify(testnet_sig, kp.public, tx), false);
-        assert_eq!(testnet_ctx.verify(mainnet_sig, kp.public, tx), false);
-
-        tx.valid_until = !tx.valid_until;
-        assert_eq!(testnet_ctx.verify(testnet_sig, kp.public, tx), false);
-        assert_eq!(mainnet_ctx.verify(mainnet_sig, kp.public, tx), false);
-    };
+enum TransactionType {
+    PaymentTx,
+    DelegationTx,
 }
 
-macro_rules! assert_sign_delegation_tx {
-    ($sec_key:expr, $source_address:expr, $receiver_address:expr, $fee:expr,
+macro_rules! assert_sign_verify_tx {
+    ($tx_type:expr, $sec_key:expr, $source_address:expr, $receiver_address:expr, $amount:expr, $fee:expr,
      $nonce:expr, $valid_until:expr, $memo:expr, $testnet_target:expr, $mainnet_target:expr) => {
         let kp = Keypair::from_hex($sec_key).expect("failed to create keypair");
         assert_eq!(
             kp.public,
             PubKey::from_address($source_address).expect("invalid source address")
         );
-        let mut tx = Transaction::new_delegation(
-            PubKey::from_address($source_address).expect("invalid source address"),
-            PubKey::from_address($receiver_address).expect("invalid receiver address"),
-            $fee,
-            $nonce,
-        )
-        .set_valid_until($valid_until)
-        .set_memo_str($memo);
+        let mut tx = match $tx_type {
+            TransactionType::PaymentTx => Transaction::new_payment(
+                PubKey::from_address($source_address).expect("invalid source address"),
+                PubKey::from_address($receiver_address).expect("invalid receiver address"),
+                $amount,
+                $fee,
+                $nonce,
+            ),
+            TransactionType::DelegationTx => Transaction::new_delegation(
+                PubKey::from_address($source_address).expect("invalid source address"),
+                PubKey::from_address($receiver_address).expect("invalid receiver address"),
+                $fee,
+                $nonce,
+            ),
+        };
+
+        tx = tx.set_valid_until($valid_until).set_memo_str($memo);
 
         let mut testnet_ctx = mina_signer::create(NetworkId::TESTNET);
         let testnet_sig = testnet_ctx.sign(kp, tx);
@@ -151,7 +123,8 @@ fn signer_zero_test() {
 
 #[test]
 fn sign_payment_test_1() {
-    assert_sign_payment_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type   */ TransactionType::PaymentTx,
         /* sender secret key  */ "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
         /* source address     */ "B62qnzbXmRNo9q32n4SNu2mpB8e7FYYLH8NmaX6oFCBYjjQ8SbD7uzV",
         /* receiver address   */ "B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt",
@@ -167,7 +140,8 @@ fn sign_payment_test_1() {
 
 #[test]
 fn sign_payment_test_2() {
-    assert_sign_payment_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type  */ TransactionType::PaymentTx,
         /* sender secret key */ "3414fc16e86e6ac272fda03cf8dcb4d7d47af91b4b726494dab43bf773ce1779",
         /* source address    */ "B62qoG5Yk4iVxpyczUrBNpwtx2xunhL48dydN53A2VjoRwF8NUTbVr4",
         /* receiver address  */ "B62qrKG4Z8hnzZqp1AL8WsQhQYah3quN1qUj3SyfJA8Lw135qWWg1mi",
@@ -183,7 +157,8 @@ fn sign_payment_test_2() {
 
 #[test]
 fn sign_payment_test_3() {
-    assert_sign_payment_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type  */ TransactionType::PaymentTx,
         /* sender secret key */ "3414fc16e86e6ac272fda03cf8dcb4d7d47af91b4b726494dab43bf773ce1779",
         /* source address    */ "B62qoG5Yk4iVxpyczUrBNpwtx2xunhL48dydN53A2VjoRwF8NUTbVr4",
         /* receiver address  */ "B62qoqiAgERjCjXhofXiD7cMLJSKD8hE8ZtMh4jX5MPNgKB4CFxxm1N",
@@ -199,7 +174,8 @@ fn sign_payment_test_3() {
 
 #[test]
 fn sign_payment_test_4() {
-    assert_sign_payment_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type  */ TransactionType::PaymentTx,
         /* sender secret key */ "1dee867358d4000f1dafa5978341fb515f89eeddbe450bd57df091f1e63d4444",
         /* source address    */ "B62qoqiAgERjCjXhofXiD7cMLJSKD8hE8ZtMh4jX5MPNgKB4CFxxm1N",
         /* receiver address  */ "B62qnzbXmRNo9q32n4SNu2mpB8e7FYYLH8NmaX6oFCBYjjQ8SbD7uzV",
@@ -215,10 +191,12 @@ fn sign_payment_test_4() {
 
 #[test]
 fn sign_delegation_test_1() {
-    assert_sign_delegation_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type  */ TransactionType::DelegationTx,
         /* sender secret key */ "164244176fddb5d769b7de2027469d027ad428fadcc0c02396e6280142efb718",
         /* source address    */ "B62qnzbXmRNo9q32n4SNu2mpB8e7FYYLH8NmaX6oFCBYjjQ8SbD7uzV",
         /* receiver address  */ "B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt",
+        /* amount            */ 0,
         /* fee               */ 2000000000,
         /* nonce             */ 16,
         /* valid until       */ 1337,
@@ -230,10 +208,12 @@ fn sign_delegation_test_1() {
 
 #[test]
 fn sign_delegation_test_2() {
-    assert_sign_delegation_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type  */ TransactionType::DelegationTx,
         /* sender secret key */ "20f84123a26e58dd32b0ea3c80381f35cd01bc22a20346cc65b0a67ae48532ba",
         /* source address    */ "B62qkiT4kgCawkSEF84ga5kP9QnhmTJEYzcfgGuk6okAJtSBfVcjm1M",
         /* receiver address  */ "B62qnzbXmRNo9q32n4SNu2mpB8e7FYYLH8NmaX6oFCBYjjQ8SbD7uzV",
+        /* amount            */ 0,
         /* fee               */ 2000000000,
         /* nonce             */ 0,
         /* valid until       */ 4294967295,
@@ -245,10 +225,12 @@ fn sign_delegation_test_2() {
 
 #[test]
 fn sign_delegation_test_3() {
-    assert_sign_delegation_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type  */ TransactionType::DelegationTx,
         /* sender secret key */ "3414fc16e86e6ac272fda03cf8dcb4d7d47af91b4b726494dab43bf773ce1779",
         /* source address    */ "B62qoG5Yk4iVxpyczUrBNpwtx2xunhL48dydN53A2VjoRwF8NUTbVr4",
         /* receiver address  */ "B62qkiT4kgCawkSEF84ga5kP9QnhmTJEYzcfgGuk6okAJtSBfVcjm1M",
+        /* amount            */ 0,
         /* fee               */ 42000000000,
         /* nonce             */ 1,
         /* valid until       */ 4294967295,
@@ -260,10 +242,12 @@ fn sign_delegation_test_3() {
 
 #[test]
 fn sign_delegation_test_4() {
-    assert_sign_delegation_tx!(
+    assert_sign_verify_tx!(
+        /* Transaction type  */ TransactionType::DelegationTx,
         /* sender secret key */ "336eb4a19b3d8905824b0f2254fb495573be302c17582748bf7e101965aa4774",
         /* source address    */ "B62qrKG4Z8hnzZqp1AL8WsQhQYah3quN1qUj3SyfJA8Lw135qWWg1mi",
         /* receiver address  */ "B62qicipYxyEHu7QjUqS7QvBipTs5CzgkYZZZkPoKVYBu6tnDUcE9Zt",
+        /* amount            */ 0,
         /* fee               */ 1202056900,
         /* nonce             */ 0,
         /* valid until       */ 577216,
