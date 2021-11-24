@@ -1,4 +1,4 @@
-use signer::{CompressedPubKey, Input, NetworkId, PubKey, PubKeyHelpers, ROInput};
+use mina_signer::{CompressedPubKey, Input, NetworkId, PubKey, PubKeyHelpers, ROInput};
 
 const MEMO_BYTES: usize = 34;
 const TAG_BITS: usize = 3;
@@ -121,7 +121,7 @@ impl Transaction {
     }
 }
 
-use signer::Keypair;
+use mina_signer::Keypair;
 
 #[test]
 fn transaction_domain() {

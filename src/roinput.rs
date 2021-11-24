@@ -3,7 +3,7 @@
 //! Definition of random oracle input structure and
 //! methods for serializing into bytes and field elements
 
-use crate::{BaseField, FieldHelpers, NetworkId, ScalarField, ScalarHelpers};
+use crate::{BaseField, FieldHelpers, NetworkId, ScalarField};
 use ark_ff::PrimeField;
 use bitvec::{prelude::*, view::AsBits};
 
@@ -31,7 +31,7 @@ pub trait Input: Copy {
 /// For example,
 ///
 /// ```rust
-/// use signer::{CompressedPubKey, Input, NetworkId, ROInput};
+/// use mina_signer::{CompressedPubKey, Input, NetworkId, ROInput};
 ///
 /// #[derive(Clone, Copy)]
 /// pub struct MyThing {

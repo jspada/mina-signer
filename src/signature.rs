@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::{BaseField, FieldHelpers, ScalarField, ScalarHelpers};
+use crate::{BaseField, FieldHelpers, ScalarField};
 
 /// Signature structure
 #[derive(Clone, Copy, Eq, fmt::Debug, PartialEq)]

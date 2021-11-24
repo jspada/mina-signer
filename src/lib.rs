@@ -3,7 +3,7 @@
 //! **Example**
 //!
 //! ```
-//! use signer::{Input, Keypair, NetworkId, ROInput, Signer};
+//! use mina_signer::{Input, Keypair, NetworkId, ROInput, Signer};
 //!
 //! #[derive(Clone, Copy)]
 //! struct Thing {
@@ -32,7 +32,7 @@
 //! let kp = Keypair::rand();
 //! let thang = Thing { foo: 31, bar: 45 };
 //!
-//! let mut ctx = signer::create(NetworkId::TESTNET);
+//! let mut ctx = mina_signer::create(NetworkId::TESTNET);
 //! let sig = ctx.sign(kp, thang);
 //! assert_eq!(ctx.verify(sig, kp.public, thang), true);
 //! ```
@@ -45,7 +45,7 @@ pub mod roinput;
 pub mod schnorr;
 pub mod signature;
 
-pub use domain::{BaseField, CurvePoint, FieldHelpers, ScalarField, ScalarHelpers};
+pub use domain::{BaseField, CurvePoint, FieldHelpers, ScalarField};
 pub use keypair::Keypair;
 pub use pubkey::{CompressedPubKey, PubKey, PubKeyHelpers};
 pub use roinput::{Input, ROInput};

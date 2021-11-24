@@ -1,7 +1,7 @@
 pub mod transaction;
 
 use ark_ff::Zero;
-use signer::{BaseField, Keypair, NetworkId, PubKey, PubKeyHelpers, ScalarField, Signer};
+use mina_signer::{BaseField, Keypair, NetworkId, PubKey, PubKeyHelpers, ScalarField, Signer};
 pub use transaction::Transaction;
 
 macro_rules! assert_sign_payment_tx {
@@ -22,10 +22,10 @@ macro_rules! assert_sign_payment_tx {
         .set_valid_until($valid_until)
         .set_memo_str($memo);
 
-        let mut testnet_ctx = signer::create(NetworkId::TESTNET);
+        let mut testnet_ctx = mina_signer::create(NetworkId::TESTNET);
         let testnet_sig = testnet_ctx.sign(kp, tx);
 
-        let mut mainnet_ctx = signer::create(NetworkId::MAINNET);
+        let mut mainnet_ctx = mina_signer::create(NetworkId::MAINNET);
         let mainnet_sig = mainnet_ctx.sign(kp, tx);
 
         // Signing checks
@@ -63,10 +63,10 @@ macro_rules! assert_sign_delegation_tx {
         .set_valid_until($valid_until)
         .set_memo_str($memo);
 
-        let mut testnet_ctx = signer::create(NetworkId::TESTNET);
+        let mut testnet_ctx = mina_signer::create(NetworkId::TESTNET);
         let testnet_sig = testnet_ctx.sign(kp, tx);
 
-        let mut mainnet_ctx = signer::create(NetworkId::MAINNET);
+        let mut mainnet_ctx = mina_signer::create(NetworkId::MAINNET);
         let mainnet_sig = mainnet_ctx.sign(kp, tx);
 
         // Signing checks
@@ -112,7 +112,7 @@ fn signer_test_raw() {
         ]
     );
 
-    let mut ctx = signer::create(NetworkId::TESTNET);
+    let mut ctx = mina_signer::create(NetworkId::TESTNET);
     let sig = ctx.sign(kp, tx);
 
     assert_eq!(sig.to_string(),
@@ -132,7 +132,7 @@ fn signer_zero_test() {
         16,
     );
 
-    let mut ctx = signer::create(NetworkId::TESTNET);
+    let mut ctx = mina_signer::create(NetworkId::TESTNET);
     let sig = ctx.sign(kp, tx);
 
     assert_eq!(ctx.verify(sig, kp.public, tx), true);
@@ -277,7 +277,7 @@ fn custom_signer_test() {
     use oracle::{pasta, poseidon};
 
     let kp = Keypair::rand();
-    let mut ctx = signer::custom::<poseidon::PlonkSpongeConstants15W>(
+    let mut ctx = mina_signer::custom::<poseidon::PlonkSpongeConstants15W>(
         pasta::fp_3::params(),
         NetworkId::MAINNET,
     );

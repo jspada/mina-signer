@@ -2,7 +2,7 @@
 //!
 //! Definition of secret key, keypairs and related helpers
 
-use crate::{CurvePoint, PubKey, PubKeyHelpers, ScalarField, ScalarHelpers};
+use crate::{CurvePoint, FieldHelpers, PubKey, PubKeyHelpers, ScalarField};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_ff::UniformRand;
 use rand;

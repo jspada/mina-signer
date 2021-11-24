@@ -1,5 +1,5 @@
 [package]
-name = "signer"
+name = "mina-signer"
 version = "0.1.0"
 authors = ["Joseph Spadavecchia <joseph@redtrie.com>"]
 edition = "2018"
