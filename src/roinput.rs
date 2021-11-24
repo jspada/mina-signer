@@ -3,44 +3,30 @@
 //! Definition of random oracle input structure and
 //! methods for serializing into bytes and field elements
 
-use crate::{BaseField, FieldHelpers, NetworkId, ScalarField};
+use crate::{BaseField, FieldHelpers, ScalarField};
 use ark_ff::PrimeField;
 use bitvec::{prelude::*, view::AsBits};
-
-/// Interface for signed objects
-///
-/// See example in [ROInput] documentation
-pub trait Input: Copy {
-    /// Serialization to random oracle input
-    fn to_roinput(self) -> ROInput;
-
-    /// Returns the unique domain string for this input type on network specified by `network_id`.
-    ///
-    /// The domain string length must be `<= 20`.
-    // (TODO: Limit at compile time)
-    fn domain_string(self, network_id: NetworkId) -> &'static str;
-}
 
 /// Random oracle input structure
 ///
 /// The random oracle input encapsulates the serialization format and methods using during signing.
 ///
-/// When implementing the [Input] trait in order to enable signing for a type, you must implement
+/// When implementing the [crate::Hashable] trait in order to enable signing for a type, you must implement
 /// its `to_roinput()` serialization method using the [ROInput] functions below.
 ///
 /// For example,
 ///
 /// ```rust
-/// use mina_signer::{CompressedPubKey, Input, NetworkId, ROInput};
+/// use mina_signer::{CompressedPubKey, Hashable, NetworkId, ROInput, Signable};
 ///
 /// #[derive(Clone, Copy)]
-/// pub struct MyThing {
+/// pub struct MyExample {
 ///     pub account: CompressedPubKey,
 ///     pub amount: u64,
 ///     pub nonce: u32,
 /// }
 ///
-/// impl Input for MyThing {
+/// impl Hashable for MyExample {
 ///     fn to_roinput(self) -> ROInput {
 ///         let mut roi = ROInput::new();
 ///
@@ -51,13 +37,6 @@ pub trait Input: Copy {
 ///
 ///         roi
 ///     }
-///
-///     fn domain_string(self, network_id: NetworkId) -> &'static str {
-///        match network_id {
-///            NetworkId::MAINNET => "MyThingSigMainnet",
-///            NetworkId::TESTNET => "MyThingSigTestnet",
-///        }
-///    }
 /// }
 /// ```
 /// **Details:** For technical reasons related to our proof system and performance, fields are

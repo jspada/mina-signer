@@ -1,9 +1,11 @@
+#![warn(missing_docs)]
+
 //! Mina signer library for verification and signing
 //!
 //! **Example**
 //!
 //! ```
-//! use mina_signer::{Input, Keypair, NetworkId, ROInput, Signer};
+//! use mina_signer::{Hashable, Keypair, NetworkId, ROInput, Signable, Signer};
 //!
 //! #[derive(Clone, Copy)]
 //! struct Thing {
@@ -11,7 +13,7 @@
 //!     bar: u64,
 //! }
 //!
-//! impl Input for Thing {
+//! impl Hashable for Thing {
 //!     fn to_roinput(self) -> ROInput {
 //!         let mut roi = ROInput::new();
 //!
@@ -20,8 +22,10 @@
 //!
 //!         roi
 //!     }
+//! }
 //!
-//!     fn domain_string(self, network_id: NetworkId) -> &'static str {
+//! impl Signable for Thing {
+//!     fn domain_string(network_id: NetworkId) -> &'static str {
 //!        match network_id {
 //!            NetworkId::MAINNET => "ThingSigMainnet",
 //!            NetworkId::TESTNET => "ThingSigTestnet",
@@ -36,7 +40,6 @@
 //! let sig = ctx.sign(kp, thang);
 //! assert_eq!(ctx.verify(sig, kp.public, thang), true);
 //! ```
-#![warn(missing_docs)]
 
 pub mod domain;
 pub mod keypair;
@@ -48,7 +51,7 @@ pub mod signature;
 pub use domain::{BaseField, CurvePoint, FieldHelpers, ScalarField};
 pub use keypair::Keypair;
 pub use pubkey::{CompressedPubKey, PubKey, PubKeyHelpers};
-pub use roinput::{Input, ROInput};
+pub use roinput::ROInput;
 pub use schnorr::Schnorr;
 pub use signature::Signature;
 
@@ -76,17 +79,69 @@ impl From<NetworkId> for u8 {
     }
 }
 
-/// Signer interface for signing [Inputs](Input) and verifying [Signatures](Signature) using [Keypairs](Keypair) and [PubKeys](PubKey)
-pub trait Signer {
-    /// Sign `input` (see [Input]) using keypair `kp` and return the corresponding signature.
-    fn sign<I: Input>(&mut self, kp: Keypair, input: I) -> Signature;
+/// Interface for hashable objects
+///
+/// See example in [ROInput] documentation
+pub trait Hashable: Copy {
+    /// Serialization to random oracle input
+    fn to_roinput(self) -> ROInput;
+}
 
-    /// Verify that the signature `sig` on `input` (see [Input]) is signed with the secret key corresponding to `pub_key`.
+/// Interface for signed objects
+///
+/// **Example**
+///
+/// ```
+/// use mina_signer::{Hashable, NetworkId, ROInput, Signable};
+///
+/// #[derive(Clone, Copy)]
+/// struct Example;
+///
+/// impl Hashable for Example {
+///     fn to_roinput(self) -> ROInput {
+///         let roi = ROInput::new();
+///         // Serialize example members
+///         roi
+///     }
+/// }
+///
+/// impl Signable for Example {
+///     fn domain_string(network_id: NetworkId) -> &'static str {
+///        match network_id {
+///            NetworkId::MAINNET => "ExampleSigMainnet",
+///            NetworkId::TESTNET => "ExampleSigTestnet",
+///        }
+///    }
+/// }
+/// ```
+///
+/// Please see [here](crate) for a more complete example.
+pub trait Signable: Hashable {
+    /// Returns the unique domain string for this input type on network specified by `network_id`.
+    ///
+    /// The domain string length must be `<= 20`.
+    fn domain_string(network_id: NetworkId) -> &'static str;
+}
+
+/// Signer interface for signing [Signable] inputs and verifying [Signatures](Signature) using [Keypairs](Keypair) and [PubKeys](PubKey)
+pub trait Signer {
+    /// Sign `input` (see [Signable]) using keypair `kp` and return the corresponding signature.
+    fn sign<S: Signable>(&mut self, kp: Keypair, input: S) -> Signature;
+
+    /// Verify that the signature `sig` on `input` (see [Signable]) is signed with the secret key corresponding to `pub_key`.
     /// Return `true` if the signature is valid and `false` otherwise.
-    fn verify<I: Input>(&mut self, sig: Signature, pub_key: PubKey, input: I) -> bool;
+    fn verify<S: Signable>(&mut self, sig: Signature, pub_key: PubKey, input: S) -> bool;
 }
 
 /// Create a default signer context for network instance identified by `network_id`
+///
+/// **Example**
+///
+/// ```
+/// use mina_signer::NetworkId;
+///
+/// let mut ctx = mina_signer::create(NetworkId::MAINNET);
+/// ```
 pub fn create(network_id: NetworkId) -> impl Signer {
     Schnorr::<PlonkSpongeConstantsBasic>::new(
         ArithmeticSponge::<BaseField, PlonkSpongeConstantsBasic>::new(pasta::fp::params()),
@@ -95,6 +150,18 @@ pub fn create(network_id: NetworkId) -> impl Signer {
 }
 
 /// Create a custom signer context for network instance identified by `network_id` using custom sponge parameters `params`
+///
+/// **Example**
+///
+/// ```
+/// use mina_signer::NetworkId;
+/// use oracle::{pasta, poseidon};
+///
+/// let mut ctx = mina_signer::custom::<poseidon::PlonkSpongeConstants5W>(
+///     pasta::fp5::params(),
+///     NetworkId::TESTNET,
+/// );
+/// ```
 pub fn custom<SC: SpongeConstants>(
     params: ArithmeticSpongeParams<BaseField>,
     network_id: NetworkId,

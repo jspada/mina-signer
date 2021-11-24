@@ -19,14 +19,14 @@ use blake2::{
     VarBlake2b,
 };
 use oracle::{
-    poseidon::SpongeConstants,
+    poseidon::{SpongeConstants, SpongeState},
     rndoracle::{ArithmeticSponge, Sponge},
 };
 use std::ops::Neg;
 
 use crate::{
-    BaseField, CurvePoint, FieldHelpers, Input, Keypair, NetworkId, PubKey, ROInput, ScalarField,
-    Signature, Signer,
+    BaseField, CurvePoint, FieldHelpers, Hashable, Keypair, NetworkId, PubKey, ROInput,
+    ScalarField, Signable, Signature, Signer,
 };
 
 /// Schnorr signer context for the Mina signature algorithm
@@ -38,7 +38,10 @@ pub struct Schnorr<SC: SpongeConstants> {
 }
 
 impl<SC: SpongeConstants> Signer for Schnorr<SC> {
-    fn sign<I: Input>(&mut self, kp: Keypair, input: I) -> Signature {
+    fn sign<S>(&mut self, kp: Keypair, input: S) -> Signature
+    where
+        S: Signable,
+    {
         let k: ScalarField = self.blinding_hash(&kp, input);
         let r: CurvePoint = CurvePoint::prime_subgroup_generator().mul(k).into_affine();
         let k: ScalarField = if r.y.into_repr().is_even() { k } else { -k };
@@ -49,7 +52,10 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
         Signature::new(r.x, s)
     }
 
-    fn verify<I: Input>(&mut self, sig: Signature, public: PubKey, input: I) -> bool {
+    fn verify<S>(&mut self, sig: Signature, public: PubKey, input: S) -> bool
+    where
+        S: Signable,
+    {
         let ev: ScalarField = self.message_hash(&public, sig.rx, input);
 
         let sv: CurvePoint = CurvePoint::prime_subgroup_generator()
@@ -68,15 +74,15 @@ impl<SC: SpongeConstants> Signer for Schnorr<SC> {
 
 impl<SC: SpongeConstants> Schnorr<SC> {
     /// Create a new Schnorr signer context for network instance `network_id` using arithmetic sponge defined by `sponge`.
-    pub fn new(sponge: ArithmeticSponge<BaseField, SC>, network_id: NetworkId) -> Self {
+    pub fn new(sponge: ArithmeticSponge<BaseField, SC>, network_id: NetworkId) -> Schnorr<SC> {
         Schnorr::<SC> { sponge, network_id }
     }
 
-    fn domain_bytes<I>(&self, input: I) -> Vec<u8>
+    fn domain_bytes<S>(network_id: NetworkId) -> Vec<u8>
     where
-        I: Input,
+        S: Signable,
     {
-        let mut domain_string = input.domain_string(self.network_id);
+        let mut domain_string = S::domain_string(network_id);
         // Domain prefixes have a max length of 20 and are padded with '*'
         assert!(domain_string.len() <= 20);
         domain_string = &domain_string[..std::cmp::min(domain_string.len(), 20)];
@@ -89,9 +95,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
     // This function uses a cryptographic hash function to create a uniformly and
     // randomly distributed nonce.  It is crucial for security that no two different
     // messages share the same nonce.
-    fn blinding_hash<I>(&self, kp: &Keypair, input: I) -> ScalarField
+    fn blinding_hash<H>(&self, kp: &Keypair, input: H) -> ScalarField
     where
-        I: Input,
+        H: Hashable,
     {
         let mut hasher = VarBlake2b::new(32).unwrap();
 
@@ -119,9 +125,9 @@ impl<SC: SpongeConstants> Schnorr<SC> {
     // randomly distributed scalar field element.  It uses Mina's variant of the Poseidon
     // SNARK-friendly cryptographic hash function.
     // Details: <https://github.com/o1-labs/cryptography-rfcs/blob/httpsnapps-notary-signatures/mina/001-poseidon-sponge.md>
-    fn message_hash<I>(&mut self, pub_key: &PubKey, rx: BaseField, input: I) -> ScalarField
+    fn message_hash<S>(&mut self, pub_key: &PubKey, rx: BaseField, input: S) -> ScalarField
     where
-        I: Input,
+        S: Signable,
     {
         let mut roi: ROInput = input.to_roinput();
         roi.append_field(pub_key.x);
@@ -129,10 +135,14 @@ impl<SC: SpongeConstants> Schnorr<SC> {
         roi.append_field(rx);
 
         // Set sponge initial state (explicitly init state so signer context can be reused)
+        // N.B. Mina sets the sponge's initial state by hashing the input's domain bytes
         self.sponge.state = vec![BaseField::zero(); self.sponge.state.len()];
-        self.sponge.absorb(&[
-            BaseField::from_bytes(&self.domain_bytes(input)).expect("invalid domain bytes")
-        ]);
+        self.sponge.sponge_state = SpongeState::Absorbed(0);
+        self.sponge
+            .absorb(&[
+                BaseField::from_bytes(&Schnorr::<SC>::domain_bytes::<S>(self.network_id))
+                    .expect("invalid domain bytes"),
+            ]);
         self.sponge.squeeze();
 
         // Absorb random oracle input

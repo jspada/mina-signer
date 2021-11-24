@@ -16,7 +16,7 @@ pub type ScalarField = <CurvePoint as AffineCurve>::ScalarField;
 
 use ark_serialize::CanonicalSerialize;
 
-/// Base field element helpers
+/// Field element helpers
 pub trait FieldHelpers<F: PrimeField> {
     /// Deserialize from bytes
     fn from_bytes(bytes: &[u8]) -> Result<F, &str>;
