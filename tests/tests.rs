@@ -2,6 +2,7 @@ pub mod transaction;
 
 use ark_ff::Zero;
 use mina_signer::{BaseField, Keypair, NetworkId, PubKey, ScalarField, Signer};
+use rand;
 pub use transaction::Transaction;
 
 macro_rules! assert_sign_payment_tx {
@@ -276,7 +277,7 @@ fn sign_delegation_test_4() {
 fn custom_signer_test() {
     use oracle::{pasta, poseidon};
 
-    let kp = Keypair::rand();
+    let kp = Keypair::rand(&mut rand::rngs::OsRng);
     let mut ctx = mina_signer::custom::<poseidon::PlonkSpongeConstants15W>(
         pasta::fp_3::params(),
         NetworkId::MAINNET,

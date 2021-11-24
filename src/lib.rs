@@ -5,6 +5,7 @@
 //! **Example**
 //!
 //! ```
+//! use rand;
 //! use mina_signer::{Hashable, Keypair, NetworkId, ROInput, Signable, Signer};
 //!
 //! #[derive(Clone, Copy)]
@@ -33,7 +34,7 @@
 //!    }
 //! }
 //!
-//! let kp = Keypair::rand();
+//! let kp = Keypair::rand(&mut rand::rngs::OsRng);
 //! let thang = Thing { foo: 31, bar: 45 };
 //!
 //! let mut ctx = mina_signer::create(NetworkId::TESTNET);

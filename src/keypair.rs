@@ -7,7 +7,7 @@ use core::fmt;
 use crate::{CurvePoint, FieldHelpers, PubKey, ScalarField, SecKey};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_ff::UniformRand;
-use rand;
+use rand::{self, CryptoRng, RngCore};
 
 /// Keypair structure
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -28,8 +28,8 @@ impl Keypair {
     }
 
     /// Generate a random keypair
-    pub fn rand() -> Self {
-        let secret: ScalarField = ScalarField::rand(&mut rand::rngs::OsRng);
+    pub fn rand(rng: &mut (impl RngCore + CryptoRng)) -> Self {
+        let secret: ScalarField = ScalarField::rand(rng);
         let public: CurvePoint = CurvePoint::prime_subgroup_generator()
             .mul(secret)
             .into_affine();
