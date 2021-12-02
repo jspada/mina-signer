@@ -8,9 +8,9 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-oracle = { path = "./proof-systems/oracle" }
-mina-curves = { path = "./proof-systems/curves" }
-commitment_dlog = { path = "./proof-systems/dlog/commitment" }
+oracle = { git = "https://github.com/o1-labs/proof-systems.git", rev = "902f3f7bbdb55edc979af4b3a7e2b3f0c5c76cc3" }
+mina-curves = { git = "https://github.com/o1-labs/proof-systems.git", rev = "902f3f7bbdb55edc979af4b3a7e2b3f0c5c76cc3" }
+commitment_dlog = { git = "https://github.com/o1-labs/proof-systems.git", rev = "902f3f7bbdb55edc979af4b3a7e2b3f0c5c76cc3" }
 
 ark-ec = { version = "0.3.0", features = [ "parallel" ] }
 ark-ff = { version = "0.3.0", features = [ "parallel", "asm" ] }
