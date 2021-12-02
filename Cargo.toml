@@ -1,0 +1,27 @@
+[package]
+name = "mina-signer"
+version = "0.1.0"
+authors = ["Joseph Spadavecchia <joseph@redtrie.com>"]
+edition = "2018"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+oracle = { git = "https://github.com/o1-labs/proof-systems.git", rev = "902f3f7bbdb55edc979af4b3a7e2b3f0c5c76cc3" }
+mina-curves = { git = "https://github.com/o1-labs/proof-systems.git", rev = "902f3f7bbdb55edc979af4b3a7e2b3f0c5c76cc3" }
+commitment_dlog = { git = "https://github.com/o1-labs/proof-systems.git", rev = "902f3f7bbdb55edc979af4b3a7e2b3f0c5c76cc3" }
+
+ark-ec = { version = "0.3.0", features = [ "parallel" ] }
+ark-ff = { version = "0.3.0", features = [ "parallel", "asm" ] }
+ark-serialize = { version = "0.3.0" }
+
+rand = { version = "0.8.0" }
+array-init = { version = "0.1.1" }
+blake2 = { version = "0.9.1" }
+hex = { version = "0.4" }
+bitvec = { version = "0.22.3" }
+sha2 = { version = "0.9.6" }
+bs58 = { version = "0.4.0" }
+byteordered =  { version = "0.6.0" }
+byteorder =  { version = "1.4.3" }
